@@ -1,16 +1,14 @@
-# React + Vite
+# Monte Verde MG
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+App do Portal Monte Verde (monteverdemg.com.br): o que o turista precisa em Monte Verde e Camanducaia, com quem está aberto agora.
 
-Currently, two official plugins are available:
+- **Emergência**: 190, 192, 193, pronto-socorro, farmácias, mecânico, táxi
+- **Busca por problema**: "dente quebrado", "pneu furou", "jantar"
+- **Painel** em `/admin`: lugares mais procurados, buscas sem resultado, leads e edição de horários
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Feito com React + Vite + Tailwind, dados no Supabase (projeto `monteverde`).
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install
+npm run dev
+```
