@@ -10,6 +10,7 @@ import { FOTOS } from '../data/fotos'
 import { agoraMV, DIAS, DIAS_NOME } from '../lib/horario'
 import { linkRota, registrar } from '../lib/track'
 import { COM_QUEM, GOSTOS, RITMOS, SLOTS, candidatos, montarRoteiro, alternativas, motivo, textoCompartilhar, inicioPadrao } from '../lib/roteiro'
+import { AvisarChegada } from '../components/Avisar'
 
 const CHAVE = 'mv_roteiro_v1'
 const ler = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) } catch { return null } }
@@ -253,6 +254,8 @@ export function Roteiro() {
           <button onClick={compartilhar} className="botao h-12 min-h-0 flex-1 bg-white/10 text-[15px] text-white"><Share2 size={17} />{copiado ? 'Copiado' : 'Enviar'}</button>
         </div>
       </section>
+
+      <AvisarChegada perfil={perfil} />
 
       <nav className="sticky top-0 z-30 flex gap-2 overflow-x-auto bg-[var(--nevoa)] px-5 py-3 scrollbar-hide" aria-label="Dias">
         {roteiro.map((x, k) => (

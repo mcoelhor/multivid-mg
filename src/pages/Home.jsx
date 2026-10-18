@@ -16,6 +16,8 @@ import { useOfertas } from '../hooks/useOfertas'
 import { Avisos } from '../components/Avisos'
 import { BotaoVoz } from '../components/BotaoVoz'
 import { CartaoOferta } from '../components/Oferta'
+import { useInstalar } from '../hooks/useInstalar'
+import { registrar } from '../lib/track'
 
 const POSTER = [FOTOS.marDeNuvens, FOTOS.porDoSol, FOTOS.enxaimel, FOTOS.serra, FOTOS.ruaAraucaria]
 const SO_AQUI = [
@@ -77,6 +79,43 @@ function chipsDaHora(min, chuva = false) {
   return [['Fondue', 'fondue'], ['Pizza', 'pizza'], ['Cervejaria', 'cervejaria'], ['A dois', 'a-dois']]
 }
 
+const MV = { lat: -22.86, lon: -46.03 }
+function distanciaKm(a, b) {
+  const r = Math.PI / 180, R = 6371
+  const x = Math.sin((b.lat - a.lat) * r / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lon - a.lon) * r / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(x))
+}
+
+/** Quem já liberou a localização e está na vila ganha as boas-vindas (uma vez por dia). */
+function useChegou() {
+  const [chegou, setChegou] = useState(false)
+  useEffect(() => {
+    if (!navigator.geolocation || !navigator.permissions?.query) return
+    const hoje = new Date().toISOString().slice(0, 10)
+    try { if (localStorage.getItem('mv_chegou') === hoje) return } catch { /* */ }
+    navigator.permissions.query({ name: 'geolocation' }).then(p => {
+      if (p.state !== 'granted') return
+      navigator.geolocation.getCurrentPosition(pos => {
+        const d = distanciaKm({ lat: pos.coords.latitude, lon: pos.coords.longitude }, MV)
+        if (d <= 12) { setChegou(true); registrar('visita', { term: 'na-vila' }); try { localStorage.setItem('mv_chegou', hoje) } catch { /* */ } }
+      }, () => {}, { maximumAge: 10 * 60 * 1000, timeout: 8000 })
+    }).catch(() => {})
+  }, [])
+  return chegou
+}
+
+function BoasVindas() {
+  const { podeInstalar, instalar, ios, instalado } = useInstalar()
+  return (
+    <div className="sobe mt-4 rounded-[var(--raio)] bg-[var(--broto)] p-4 text-[var(--araucaria)]" style={{ '--i': 2 }}>
+      <p className="text-[18px] font-extrabold leading-tight tracking-[-0.02em]">Você está em Monte Verde. Bem-vindo!</p>
+      <p className="mt-1 text-[14px] leading-snug">Este guia mostra quem está aberto agora, monta seu roteiro e tem os contatos de emergência da vila.</p>
+      {!instalado && podeInstalar && <button onClick={instalar} className="botao botao-escuro mt-3 h-11 min-h-0 w-full text-[15px]">Instalar o app no celular</button>}
+      {!instalado && !podeInstalar && ios && <p className="mt-2 text-[13px]">No iPhone: Compartilhar → Adicionar à Tela de Início.</p>}
+    </div>
+  )
+}
+
 /** Logo abaixo do pôster: o agora e as quatro decisões da viagem, na primeira tela e meia. */
 function Agora() {
   const navigate = useNavigate()
@@ -86,6 +125,7 @@ function Agora() {
   const { businesses } = useBusinesses({})
   const abertos = businesses.filter(b => b.st.estado === 'aberto' || b.st.estado === 'plantao')
   const frio = clima && clima.minNoite != null && clima.minNoite <= 10 && a.min >= 840
+  const chegou = useChegou()
   const n = cat => abertos.filter(b => b.category === cat).length
   const ACOES = [
     ['Comer agora', `${n('alimentacao')} abertos`, '/categoria/alimentacao?aberto=1', 'Utensils'],
@@ -103,6 +143,8 @@ function Agora() {
       <h2 id="h-agora" className="sobe mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.03em]" style={{ '--i': 2 }}>
         {abertos.length ? <><span className="num">{abertos.length}</span> lugares abertos agora</> : 'O que você precisa agora?'}
       </h2>
+
+      {chegou && <BoasVindas />}
 
       {clima && (clima.chuvaProx || clima.chuvaHoje || frio) && (
         <Link to={clima.chuvaProx || clima.chuvaHoje ? '/busca?q=chuva' : '/busca?q=fondue'} className="sobe pressiona mt-4 flex items-center gap-3 rounded-[var(--raio)] bg-[var(--ceu)] p-4 text-[var(--araucaria)]" style={{ '--i': 3 }}>

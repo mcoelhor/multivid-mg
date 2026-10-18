@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { registrarSW } from './lib/push'
 
 // Revelação ao rolar: marca .revela/.revela-foto como vistos quando entram na tela (uma vez só).
 const io = 'IntersectionObserver' in window
@@ -10,6 +11,8 @@ const io = 'IntersectionObserver' in window
 const observa = raiz => raiz.querySelectorAll?.('.revela:not(.visto), .revela-foto:not(.visto)').forEach(el => (io ? io.observe(el) : el.classList.add('visto')))
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.matches('.revela, .revela-foto')) io ? io.observe(n) : n.classList.add('visto'); observa(n) } })))
   .observe(document.getElementById('root'), { childList: true, subtree: true })
+
+window.addEventListener('load', () => { registrarSW() })
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

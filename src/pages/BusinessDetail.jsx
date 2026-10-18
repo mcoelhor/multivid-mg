@@ -11,6 +11,7 @@ import { Rodape } from '../components/Layout/Rodape'
 import { useTitulo } from '../components/Layout/Layout'
 import { Parceiros } from '../components/Parceiros'
 import { CartaoOferta } from '../components/Oferta'
+import { AvisarAbertura } from '../components/Avisar'
 import { useOfertas } from '../hooks/useOfertas'
 import { nomeSub } from '../data/categories'
 import { semanaLinhas } from '../lib/horario'
@@ -116,6 +117,7 @@ export function BusinessDetail() {
           {b.whatsapp && <a href={linkWhatsApp(b.whatsapp)} target="_blank" rel="noopener noreferrer" onClick={acao('whatsapp')} className="botao botao-wa" style={{ minHeight: 52 }}><MessageCircle size={18} />WhatsApp</a>}
           {(b.address || b.latitude) && <a href={linkRota(b)} target="_blank" rel="noopener noreferrer" onClick={acao('rota')} className={`botao botao-claro ${b.phone && b.whatsapp ? 'col-span-2' : ''}`} style={{ minHeight: 52 }}><Navigation size={18} />Como chegar</a>}
         </div>
+        <AvisarAbertura b={b} />
 
         <div className="sobe mt-4 divide-y divide-[var(--nevoa)] rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': 2 }}>
           {b.address && (
