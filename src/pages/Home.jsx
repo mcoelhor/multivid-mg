@@ -127,10 +127,10 @@ function Agora() {
 function ConviteRoteiro() {
   return (
     <section className="relative mt-16" aria-labelledby="h-roteiro">
-      <div className="revela-foto relative h-[62svh] min-h-[420px] overflow-hidden">
+      <div className="revela-foto relative aspect-[4/3] overflow-hidden">
         <img src={FOTOS.porDoSol.g} srcSet={`${FOTOS.porDoSol.p} 700w, ${FOTOS.porDoSol.g} 1600w`} sizes="480px" alt={FOTOS.porDoSol.legenda} loading="lazy" className="deriva h-full w-full object-cover" />
       </div>
-      <div className="revela relative -mt-24 mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-6">
+      <div className="revela relative -mt-16 mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-6">
         <h2 id="h-roteiro" className="titulo">Seu fim de semana, já montado</h2>
         <p className="mt-3 text-[16px] leading-relaxed text-[var(--leve)]">
           Diga quantos dias fica, com quem vem e do que gosta. Montamos manhã, almoço, tarde e jantar, priorizando quem tem horário confirmado para o dia. Depois é só trocar o que quiser.
@@ -141,18 +141,18 @@ function ConviteRoteiro() {
   )
 }
 
-/** Frase fixa enquanto três fotos passam por ela. */
-function FrasePresa() {
+/** A vila em duas frases e três fotos, num bloco só (sem rolagem longa). */
+function Historia() {
   return (
-    <section className="relative mt-16 h-[210svh]" aria-label="Sobre Monte Verde">
-      <div className="sticky top-0 z-10 flex h-[100svh] items-center px-5">
-        <p className="max-w-[18ch] text-[24px] font-extrabold leading-[1.15] tracking-[-0.025em] text-[var(--araucaria)]">
-          Um imigrante europeu, com saudade do frio, fundou aqui uma vila de montanha.
-        </p>
-      </div>
-      <div className="absolute inset-0 pt-[55svh]">
-        <img src={FOTOS.enxaimel.p} alt={FOTOS.enxaimel.legenda} loading="lazy" className="ml-auto mr-5 aspect-[4/5] w-[46%] object-cover" />
-        <img src={FOTOS.ruaAraucaria.p} alt={FOTOS.ruaAraucaria.legenda} loading="lazy" className="ml-5 mt-[38svh] aspect-[4/5] w-[40%] object-cover" />
+    <section className="mt-16 px-5" aria-labelledby="h-historia">
+      <h2 id="h-historia" className="titulo revela max-w-[14ch]">Um pedaço da Europa a 1.554 metros</h2>
+      <p className="revela mt-3 max-w-[36ch] text-[17px] leading-relaxed text-[var(--leve)]" style={{ '--i': 1 }}>
+        Um imigrante europeu, com saudade do frio, fundou aqui uma vila de montanha. Ficaram os chalés de telhado alto, as casas enxaimel e o costume de acender a lareira.
+      </p>
+      <div className="revela mt-6 grid grid-cols-5 grid-rows-2 gap-2" style={{ '--i': 2, height: 'min(64vw, 300px)' }}>
+        <img src={FOTOS.enxaimel.p} alt={FOTOS.enxaimel.legenda} loading="lazy" className="col-span-3 row-span-2 h-full w-full rounded-[var(--raio)] object-cover" />
+        <img src={FOTOS.ruaAraucaria.p} alt={FOTOS.ruaAraucaria.legenda} loading="lazy" className="col-span-2 h-full w-full rounded-[var(--raio)] object-cover" />
+        <img src={FOTOS.capela.p} alt={FOTOS.capela.legenda} loading="lazy" className="col-span-2 h-full w-full rounded-[var(--raio)] object-cover" />
       </div>
     </section>
   )
@@ -187,9 +187,9 @@ function SoAqui() {
     return () => clearInterval(t)
   }, [i])
   return (
-    <section className="mt-16 bg-[var(--ceu)] px-5 py-14" aria-labelledby="h-soaqui">
+    <section className="mt-16 bg-[var(--ceu)] px-5 py-12" aria-labelledby="h-soaqui">
       <h2 id="h-soaqui" className="titulo revela">O que só tem aqui</h2>
-      <button onClick={() => setI(v => (v + 1) % SO_AQUI.length)} className="revela relative mx-auto mt-8 block aspect-[4/5] w-[78%] overflow-hidden" aria-label="Próxima foto">
+      <button onClick={() => setI(v => (v + 1) % SO_AQUI.length)} className="revela relative mx-auto mt-6 block aspect-[4/3] w-full overflow-hidden rounded-[var(--raio)]" aria-label="Próxima foto">
         {SO_AQUI.map(([f], k) => (
           <img key={f.id} src={f.p} alt={k === i ? f.legenda : ''} loading="lazy" className={`slide h-full w-full object-cover ${k === i ? 'on' : ''}`} style={{ transitionDuration: '700ms' }} />
         ))}
@@ -265,7 +265,7 @@ export function Home() {
       <Momentos />
       <Explorar />
       <ConviteRoteiro />
-      <FrasePresa />
+      <Historia />
       <SoAqui />
       {events.length > 0 && (
         <section className="mt-16" aria-labelledby="h-eventos">

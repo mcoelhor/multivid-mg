@@ -16,9 +16,33 @@ function visitante() {
   }
 }
 
+/**
+ * De onde a pessoa veio, guardado por 30 dias no aparelho (primeiro toque):
+ * utm_source/utm_medium da URL (QR code, Instagram, placa), ou o site que mandou (referrer),
+ * ou "app" quando abriu pelo ícone instalado, ou "direto".
+ */
+export function origem() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem('mv_origem') || 'null')
+    if (salvo && Date.now() - salvo.t < 30 * 86400e3) return salvo.v
+    const u = new URL(location.href)
+    const utm = u.searchParams.get('utm_source') || u.searchParams.get('ref') || u.searchParams.get('origem')
+    const medium = u.searchParams.get('utm_medium')
+    let v = ''
+    if (utm) v = `${utm}${medium ? '/' + medium : ''}`.toLowerCase().slice(0, 60)
+    else if (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone) v = 'app instalado'
+    else if (document.referrer) {
+      const h = new URL(document.referrer).hostname.replace(/^(www|l|lm|m)\./, '')
+      v = /instagram/.test(h) ? 'instagram' : /facebook|fb\./.test(h) ? 'facebook' : /google/.test(h) ? 'google' : /whatsapp/.test(h) ? 'whatsapp' : /tiktok/.test(h) ? 'tiktok' : h.slice(0, 60)
+    } else v = 'direto'
+    localStorage.setItem('mv_origem', JSON.stringify({ v, t: Date.now() }))
+    return v
+  } catch { return 'desconhecida' }
+}
+
 const recentes = new Map()
 
-/** kind: view | tel | whatsapp | rota | site | instagram | busca | parceiro | lead */
+/** kind: visita | view | tel | whatsapp | rota | site | instagram | busca | parceiro | lead */
 export function registrar(kind, { businessId = null, term = '', results = -1 } = {}) {
   if (/bot|crawl|spider|preview|headless/i.test(navigator.userAgent)) return
   if (localStorage.getItem('mv_equipe') === '1') return // equipe não infla os números
@@ -28,7 +52,18 @@ export function registrar(kind, { businessId = null, term = '', results = -1 } =
   recentes.set(chave, agora)
   supabase.from('interactions').insert({
     kind, business_id: businessId, term: String(term).slice(0, 120), results, visitor: visitante(),
+    source: origem(), path: location.pathname.slice(0, 80),
   }).then(() => {}, () => {})
+}
+
+/** Uma visita por dia por aparelho, com a origem. Chamar uma vez ao abrir o app. */
+export function registrarVisita() {
+  try {
+    const hoje = new Date().toISOString().slice(0, 10)
+    if (localStorage.getItem('mv_visita') === hoje) return
+    localStorage.setItem('mv_visita', hoje)
+  } catch { /* sem armazenamento: conta mesmo assim */ }
+  registrar('visita', { term: origem() })
 }
 
 export const MSG_WA = 'Olá! Encontrei vocês no Portal Monte Verde (monteverdemg.com.br).'

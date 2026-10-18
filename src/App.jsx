@@ -22,6 +22,7 @@ const AdminBusinesses = lazy(() => import('./admin/AdminBusinesses').then(m => (
 const AdminPagamentos = lazy(() => import('./admin/AdminPagamentos').then(m => ({ default: m.AdminPagamentos })))
 const AdminEvents = lazy(() => import('./admin/AdminEvents').then(m => ({ default: m.AdminEvents })))
 import { useAdmin } from './admin/useAdmin'
+import { registrarVisita } from './lib/track'
 
 function AdminGuard({ children }) {
   const { carregando, user, admin } = useAdmin()
@@ -57,6 +58,7 @@ function Rolagem() {
 }
 
 export default function App() {
+  useEffect(() => { registrarVisita() }, [])
   return (
     <BrowserRouter>
       <Rolagem />

@@ -53,6 +53,7 @@ export function AdminDashboard() {
   const [k, setK] = useState({})
   const [rank, setRank] = useState(null)
   const [vazias, setVazias] = useState([])
+  const [origens, setOrigens] = useState(null)
   const [aberto, setAberto] = useState(null)
 
   useEffect(() => {
@@ -65,11 +66,14 @@ export function AdminDashboard() {
       supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.rpc('ranking', { dias }),
       supabase.rpc('buscas', { dias, so_vazias: true }),
-    ]).then(([view, wa, tel, rota, busca, parc, leads, lugares, rk, bv]) => {
+      supabase.rpc('origens', { dias }),
+      contar('visita', dias),
+    ]).then(([view, wa, tel, rota, busca, parc, leads, lugares, rk, bv, og, visitas]) => {
       if (!vivo) return
-      setK({ view, wa, tel, rota, busca, parc, leads: leads.count || 0, lugares: lugares.count || 0 })
+      setK({ view, wa, tel, rota, busca, parc, visitas, leads: leads.count || 0, lugares: lugares.count || 0 })
       setRank(rk.data || [])
       setVazias((bv.data || []).slice(0, 8))
+      setOrigens(og.data || [])
     })
     return () => { vivo = false }
   }, [dias])
@@ -81,6 +85,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
+        <Kpi rotulo="Visitas" valor={k.visitas} sub="uma por aparelho por dia" />
         <Kpi rotulo="Leads aguardando" valor={k.leads} sub="toque para responder" onClick={() => navigate('/admin/leads')} />
         <Kpi rotulo="Contatos gerados" valor={k.wa == null ? null : k.wa + k.tel + k.rota} sub="WhatsApp + ligação + rota" />
         <Kpi rotulo="Visitas a lugares" valor={k.view} />
@@ -90,6 +95,24 @@ export function AdminDashboard() {
         <Kpi rotulo="Cliques nos parceiros" valor={k.parc} sub="Toca + Construtora" />
         <Kpi rotulo="Lugares ativos" valor={k.lugares} onClick={() => navigate('/admin/empresas')} />
       </div>
+
+      <section className="mt-5 rounded-2xl bg-white p-4">
+        <h2 className="font-bold">De onde vêm</h2>
+        <p className="text-xs text-[#626a63]">Origem do primeiro acesso de cada aparelho: QR code e links com utm_source, Instagram, Google, app instalado ou direto.</p>
+        {origens === null ? <div className="esqueleto mt-3 h-16 rounded-xl" /> : origens.length === 0 ? (
+          <p className="mt-3 text-sm text-[#626a63]">Ainda sem visitas registradas no período.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-black/5">
+            {origens.slice(0, 12).map(o => (
+              <li key={o.source} className="flex items-center gap-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate font-semibold">{o.source}</span>
+                <span className="num text-[#626a63]">{o.visitantes} {o.visitantes === 1 ? 'pessoa' : 'pessoas'}</span>
+                <span className="num w-16 text-right font-bold text-[var(--verde)]">{o.cliques} <span className="text-[11px] font-medium text-[#626a63]">contatos</span></span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="mt-5 rounded-2xl bg-white p-4">
         <h2 className="font-bold">Mais procurados</h2>
