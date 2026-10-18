@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Variáveis com nome novo (VITE_MV_*): as antigas da Vercel apontam para o banco anterior.
 // Chave publicável: feita para ficar no app. A segurança está nas regras do banco (RLS).
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cpoxykaksqlrqnstjonv.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Azm8A8z7LluWcp7_pNruxQ_NZ03PaCL'
+const supabaseUrl = import.meta.env.VITE_MV_SUPABASE_URL || 'https://cpoxykaksqlrqnstjonv.supabase.co'
+const supabaseKey = import.meta.env.VITE_MV_SUPABASE_KEY || 'sb_publishable_Azm8A8z7LluWcp7_pNruxQ_NZ03PaCL'
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: true, autoRefreshToken: true },
