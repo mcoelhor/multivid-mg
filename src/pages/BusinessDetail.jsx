@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Phone, MessageCircle, Navigation, Share2, Heart, MapPin, Globe, Clock, ChevronLeft, ChevronDown, Mail, Flag } from 'lucide-react'
+import { Phone, MessageCircle, Navigation, Share2, Heart, MapPin, Globe, Clock, ChevronLeft, ChevronDown, Mail, Flag, Store } from 'lucide-react'
 import { useBusinessBySlug, useBusinesses } from '../hooks/useBusinesses'
 import { useFavorites } from '../hooks/useFavorites'
 import { Capa, BusinessCard, planoAtivo } from '../components/UI/BusinessCard'
@@ -170,6 +170,7 @@ export function BusinessDetail() {
         </div>
 
         <Link to="/mais#corrigir" className="mt-2 flex min-h-11 items-center gap-2 px-1 text-[14px] text-[var(--leve)]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
+        <Link to="/meu-negocio" className="flex min-h-11 items-center gap-2 px-1 text-[14px] text-[var(--leve)]"><Store size={14} />É o dono? Ponha fotos e atualize sua página.</Link>
       </div>
 
       {(b.category === 'construcao' || b.category === 'imobiliarias') && <Parceiros contexto={b.category} />}

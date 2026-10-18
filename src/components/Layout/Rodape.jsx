@@ -30,12 +30,12 @@ export function Rodape() {
 
       <nav className="mt-8 grid grid-cols-2 gap-x-4 gap-y-1" aria-label="Links do rodapé">
         {LINKS.map(([t, to]) => (
-          <Link key={to} to={to} className="flex min-h-11 items-center text-[15px] text-white/80 transition-colors duration-150 hover:text-white">{t}</Link>
+          <Link key={to} to={to} className="flex min-h-11 min-w-0 items-center py-1 text-[15px] leading-snug text-white/80 transition-colors duration-150 hover:text-white">{t}</Link>
         ))}
       </nav>
 
       <p className="mt-12 max-w-[30ch] text-[15px] leading-snug text-white/70">
-        Guia local de Monte Verde e Camanducaia, MG. Parceiros pagos são sempre identificados.
+        Guia local de Monte Verde e Camanducaia, MG.
       </p>
       <p className="display -mb-[0.16em] mt-6 select-none text-[22vw] text-[var(--broto)] min-[480px]:text-[104px]" aria-hidden="true">Monte Verde</p>
     </footer>

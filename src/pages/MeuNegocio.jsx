@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Store, LogOut, Loader2, Check, Camera, Trash2, Eye, Phone, MessageCircle, Navigation, KeyRound, Ticket, Plus } from 'lucide-react'
+import { Store, LogOut, Loader2, Check, Camera, Trash2, Eye, Phone, MessageCircle, KeyRound, Ticket, Plus, Mail, Search, Clock } from 'lucide-react'
+import { Autocadastro } from '../components/Autocadastro'
+import { Reivindicar, CodigoConfirmacao } from '../components/Reivindicar'
 import { carregarOfertas } from '../hooks/useOfertas'
 import { Layout } from '../components/Layout/Layout'
 import { StatusPill } from '../components/UI/Badge'
@@ -25,26 +27,148 @@ function useSessao() {
   return s
 }
 
+const ORIGEM = () => location.origin
+
+/** Entrada da área do dono. Primeiro acesso: só o e-mail, chega um link, confirma e cria a senha. */
 function Entrar() {
+  const [modo, setModo] = useState('novo') // novo | senha | enviado
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [codigo, setCodigo] = useState('')
   const [msg, setMsg] = useState('')
   const [enviando, setEnviando] = useState(false)
-  async function enviar(e) {
+  const [espera, setEspera] = useState(0)
+  useEffect(() => { if (espera <= 0) return; const t = setTimeout(() => setEspera(espera - 1), 1000); return () => clearTimeout(t) }, [espera])
+  const mail = email.trim().toLowerCase()
+
+  async function mandarLink(e) {
+    e?.preventDefault(); setMsg('')
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { setMsg('Confira o e-mail.'); return }
+    setEnviando(true)
+    const { error } = await supabase.auth.signInWithOtp({ email: mail, options: { shouldCreateUser: true, emailRedirectTo: `${ORIGEM()}/meu-negocio?nova=1` } })
+    setEnviando(false)
+    if (error) { setMsg(/rate|seconds|limit/i.test(error.message) ? 'Aguarde um minuto e peça de novo.' : 'Não foi possível enviar o e-mail agora. Tente de novo em instantes.'); return }
+    setModo('enviado'); setEspera(60)
+  }
+  async function entrarComSenha(e) {
     e.preventDefault(); setMsg(''); setEnviando(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password: senha })
-    if (error) setMsg('E-mail ou senha incorretos. O acesso chega pelo WhatsApp depois da verificação.')
+    const { error } = await supabase.auth.signInWithPassword({ email: mail, password: senha })
+    if (error) setMsg('E-mail ou senha incorretos. Primeira vez aqui? Use “Criar conta”.')
     setEnviando(false)
   }
+  async function confirmarCodigo(e) {
+    e.preventDefault(); setMsg(''); setEnviando(true)
+    const { error } = await supabase.auth.verifyOtp({ email: mail, token: codigo.replace(/\D/g, ''), type: 'email' })
+    if (error) setMsg('Código inválido ou vencido. Peça um novo link.')
+    else { const u = new URL(location.href); u.searchParams.set('nova', '1'); history.replaceState(null, '', u) }
+    setEnviando(false)
+  }
+
+  if (modo === 'enviado') {
+    return (
+      <div className="mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-5">
+        <p className="flex items-center gap-2 text-[20px] font-extrabold tracking-[-0.02em]"><Mail size={22} className="text-[var(--musgo)]" />Confira seu e-mail</p>
+        <p className="mt-2 text-[16px] leading-relaxed text-[var(--leve)]">Mandamos um link para <b className="text-[var(--araucaria)]">{mail}</b>. Abra o e-mail <b className="text-[var(--araucaria)]">neste celular</b> e toque no link: você volta para cá e cria sua senha.</p>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--leve)]">Não chegou? Olhe no spam ou em Promoções.</p>
+        <form onSubmit={confirmarCodigo} className="mt-5 border-t border-[var(--nevoa-2)] pt-4">
+          <label className="block text-[15px] font-bold" htmlFor="oc">O e-mail trouxe um código? <span className="font-medium text-[var(--leve)]">(opcional)</span></label>
+          <div className="mt-1.5 flex gap-2">
+            <input id="oc" inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="000000" className="num min-w-0 flex-1 rounded-2xl bg-[var(--nevoa)] px-4 py-3 text-[18px] tracking-[0.2em]" />
+            <button disabled={enviando || codigo.replace(/\D/g, '').length < 6} className="botao botao-pri px-5">Confirmar</button>
+          </div>
+        </form>
+        {msg && <p className="mt-3 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
+        <div className="mt-4 flex flex-wrap gap-x-5">
+          <button onClick={() => mandarLink()} disabled={espera > 0 || enviando} className="min-h-11 text-[15px] font-bold text-[var(--musgo)] disabled:text-[var(--leve)]">{espera > 0 ? `Reenviar em ${espera}s` : 'Reenviar link'}</button>
+          <button onClick={() => { setModo('novo'); setMsg('') }} className="min-h-11 text-[15px] font-bold text-[var(--leve)]">Trocar e-mail</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={enviar} className="mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-5">
-      <p className="text-[16px] leading-relaxed text-[var(--leve)]">Entre com o e-mail e a senha que você recebeu depois de confirmar que o negócio é seu.</p>
-      <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="le">E-mail</label><input id="le" type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} className={campo} /></div>
-      <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="ls">Senha</label><input id="ls" type="password" required autoComplete="current-password" value={senha} onChange={e => setSenha(e.target.value)} className={campo} /></div>
+    <div className="mx-5">
+      <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-[var(--nevoa-2)] p-1" role="tablist">
+        {[['novo', 'Criar conta'], ['senha', 'Já tenho senha']].map(([m, t]) => (
+          <button key={m} role="tab" aria-selected={modo === m} onClick={() => { setModo(m); setMsg('') }} className={`min-h-11 rounded-full text-[15px] font-bold transition-colors duration-150 ${modo === m ? 'bg-white text-[var(--araucaria)]' : 'text-[var(--leve)]'}`}>{t}</button>
+        ))}
+      </div>
+      {modo === 'novo' ? (
+        <form onSubmit={mandarLink} className="rounded-[var(--raio)] bg-[var(--papel)] p-5" noValidate>
+          <p className="text-[16px] leading-relaxed text-[var(--leve)]">Para cadastrar seu negócio ou assumir a página que já está no guia. Grátis.</p>
+          <ol className="mt-3 space-y-1 text-[15px] leading-snug">
+            {['Coloque seu e-mail', 'Toque no link que chega no e-mail', 'Crie sua senha e cadastre o negócio'].map((t, k) => <li key={t} className="flex gap-2"><span className="num w-5 shrink-0 font-extrabold text-[var(--musgo)]">{k + 1}</span>{t}</li>)}
+          </ol>
+          <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="ne">E-mail</label><input id="ne" type="email" required autoComplete="email" inputMode="email" value={email} onChange={e => setEmail(e.target.value)} className={campo} /></div>
+          {msg && <p className="mt-3 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
+          <button disabled={enviando} className="botao botao-pri mt-5 h-14 w-full text-[17px]">{enviando ? <Loader2 size={18} className="animate-spin" /> : 'Receber link no e-mail'}</button>
+        </form>
+      ) : (
+        <form onSubmit={entrarComSenha} className="rounded-[var(--raio)] bg-[var(--papel)] p-5">
+          <div><label className="block text-[15px] font-bold" htmlFor="le">E-mail</label><input id="le" type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} className={campo} /></div>
+          <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="ls">Senha</label><input id="ls" type="password" required autoComplete="current-password" value={senha} onChange={e => setSenha(e.target.value)} className={campo} /></div>
+          {msg && <p className="mt-3 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
+          <button disabled={enviando} className="botao botao-pri mt-5 h-14 w-full text-[17px]">{enviando ? <Loader2 size={18} className="animate-spin" /> : 'Entrar'}</button>
+          <button type="button" onClick={() => mandarLink()} className="mt-3 min-h-11 w-full text-[15px] font-bold text-[var(--musgo)]">Esqueci a senha: mandar link</button>
+        </form>
+      )}
+    </div>
+  )
+}
+
+/** Depois do link: o dono cria a senha (ou uma nova, se esqueceu). */
+function CriarSenha({ user, onPronto }) {
+  const [s, setS] = useState(''); const [s2, setS2] = useState('')
+  const [msg, setMsg] = useState(''); const [enviando, setEnviando] = useState(false)
+  async function salvar(e) {
+    e.preventDefault(); setMsg('')
+    if (s.length < 8) { setMsg('Use pelo menos 8 caracteres.'); return }
+    if (s !== s2) { setMsg('As duas senhas não são iguais.'); return }
+    setEnviando(true)
+    const { error } = await supabase.auth.updateUser({ password: s, data: { senha_definida: true } })
+    setEnviando(false)
+    if (error) { setMsg(/different|same/i.test(error.message) ? 'Use uma senha diferente da anterior.' : 'Não foi possível salvar. Tente de novo.'); return }
+    onPronto()
+  }
+  return (
+    <form onSubmit={salvar} className="mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-5">
+      <p className="flex items-center gap-2 text-[20px] font-extrabold tracking-[-0.02em]"><Check size={22} className="text-[var(--musgo)]" />E-mail confirmado</p>
+      <p className="mt-1 text-[16px] leading-relaxed text-[var(--leve)]">Agora crie a senha para entrar com <b className="text-[var(--araucaria)]">{user.email}</b>.</p>
+      <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="ns">Senha <span className="font-medium text-[var(--leve)]">(mínimo 8 caracteres)</span></label><input id="ns" type="password" required autoComplete="new-password" value={s} onChange={e => setS(e.target.value)} className={campo} /></div>
+      <div className="mt-4"><label className="block text-[15px] font-bold" htmlFor="ns2">Repita a senha</label><input id="ns2" type="password" required autoComplete="new-password" value={s2} onChange={e => setS2(e.target.value)} className={campo} /></div>
       {msg && <p className="mt-3 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
-      <button disabled={enviando} className="botao botao-pri mt-5 h-14 w-full text-[17px]">{enviando ? <Loader2 size={18} className="animate-spin" /> : 'Entrar'}</button>
-      <p className="mt-4 text-[14px] leading-relaxed text-[var(--leve)]">Ainda não pediu acesso? <Link to="/anuncie#meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Este negócio é meu</Link>. Esqueceu a senha? Chame o guia no WhatsApp cadastrado e pedimos uma nova.</p>
+      <button disabled={enviando} className="botao botao-pri mt-5 h-14 w-full text-[17px]">{enviando ? <Loader2 size={18} className="animate-spin" /> : 'Salvar senha e continuar'}</button>
     </form>
+  )
+}
+
+/** Conta sem negócio (ou adicionando outro): já está no guia, ou ainda não está. */
+function LigarNegocio({ pedidos, onMudou, onFechar }) {
+  const [opcao, setOpcao] = useState('')
+  const [resp, setResp] = useState(null)
+  const pend = (pedidos || []).filter(p => p.status === 'pendente' && p.codigo !== resp?.codigo)
+  return (
+    <div className="px-5">
+      {pend.map(p => <div key={p.id} className="mb-4"><CodigoConfirmacao codigo={p.codigo} negocio={p.businesses?.name || 'seu negócio'} whatsappGuia={p.whatsapp_guia} /></div>)}
+      {resp ? (
+        <CodigoConfirmacao codigo={resp.codigo} negocio={resp.negocio} whatsappGuia={resp.whatsapp_guia} />
+      ) : (
+        <>
+          <h2 className="text-[22px] font-extrabold tracking-[-0.03em]">{pend.length ? 'Outro negócio?' : 'Qual é o seu negócio?'}</h2>
+          <div className="mt-3 grid grid-cols-1 gap-2">
+            {[['guia', 'Já está no guia', 'Assuma a página que já existe'], ['novo', 'Ainda não está no guia', 'Cadastro grátis, com fotos']].map(([id, t, d]) => (
+              <button key={id} onClick={() => setOpcao(opcao === id ? '' : id)} aria-expanded={opcao === id} className={`pressiona flex items-center gap-3 rounded-[var(--raio)] p-4 text-left ${opcao === id ? 'bg-[var(--araucaria)] text-white' : 'bg-[var(--papel)]'}`}>
+                {id === 'guia' ? <Search size={22} className="shrink-0" /> : <Plus size={22} className="shrink-0" />}
+                <span className="flex-1"><span className="block text-[17px] font-bold leading-tight">{t}</span><span className={`block text-[14px] ${opcao === id ? 'text-white/75' : 'text-[var(--leve)]'}`}>{d}</span></span>
+              </button>
+            ))}
+          </div>
+          {opcao === 'guia' && <div className="entra mt-4"><Reivindicar onPedido={d => { setResp(d); onMudou(null) }} /></div>}
+          {opcao === 'novo' && <div className="entra mt-4"><Autocadastro onPronto={d => onMudou(d?.id)} /></div>}
+        </>
+      )}
+      {onFechar && <button onClick={onFechar} className="mt-4 min-h-11 text-[15px] font-bold text-[var(--leve)]">Voltar ao meu negócio</button>}
+    </div>
   )
 }
 
@@ -88,8 +212,8 @@ function Fotos({ b, fotos, setFotos }) {
   }
   return (
     <section className="mt-6">
-      <h3 className="text-[18px] font-extrabold tracking-[-0.02em]">Fotos <span className="text-[14px] font-medium text-[var(--leve)]">({fotos.length} de 5)</span></h3>
-      <p className="mt-1 text-[14px] text-[var(--leve)]">A primeira vira a capa. Fotos de verdade do seu lugar, na horizontal, ficam melhores.</p>
+      <h3 className="text-[18px] font-extrabold tracking-[-0.02em]">Fotos do seu negócio <span className="text-[14px] font-medium text-[var(--leve)]">({fotos.length} de 5)</span></h3>
+      <p className="mt-1 text-[14px] text-[var(--leve)]">Só o dono pode pôr fotos. A primeira vira a capa; fotos de verdade, na horizontal, ficam melhores.</p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {fotos.map(f => (
           <div key={f.id} className="relative aspect-square overflow-hidden rounded-[14px] bg-[var(--nevoa-2)]">
@@ -198,8 +322,13 @@ function Editor({ negocio, onSalvo }) {
             <div key={k} className="rounded-2xl bg-white/10 py-3"><I size={16} className="mx-auto text-[var(--broto)]" /><p className="num mt-1 text-[22px] font-extrabold leading-none">{rel ? n(k) : '–'}</p><p className="mt-1 text-[12px] text-white/70">{r}</p></div>
           ))}
         </div>
-        <p className="mt-3 text-[13px] text-white/60">Últimos 30 dias no guia. <Link to={`/estabelecimento/${b.slug}`} className="underline">Ver minha página</Link></p>
+        <p className="mt-3 text-[13px] text-white/60">Últimos 30 dias no guia.{b.status === 'active' && <> <Link to={`/estabelecimento/${b.slug}`} className="underline">Ver minha página</Link></>}</p>
       </div>
+      {b.status !== 'active' && (
+        <p className="mt-3 flex gap-2.5 rounded-[var(--raio)] bg-[var(--broto)] p-4 text-[15px] leading-snug"><Clock size={18} className="mt-0.5 shrink-0" /><span><b>Em análise.</b> Sua página entra no guia depois que conferirmos, normalmente em até 2 dias úteis. Já pode pôr as fotos e completar os dados.</span></p>
+      )}
+
+      <Fotos b={b} fotos={fotos} setFotos={setFotos} />
 
       <section className="mt-6">
         <h3 className="text-[18px] font-extrabold tracking-[-0.02em]">Horário de funcionamento</h3>
@@ -238,8 +367,7 @@ function Editor({ negocio, onSalvo }) {
         ))}
       </section>
 
-      <Fotos b={b} fotos={fotos} setFotos={setFotos} />
-      <OfertasDono b={b} />
+      {b.status === 'active' && <OfertasDono b={b} />}
 
       <button onClick={salvar} disabled={estado === 'salvando'} className="botao botao-pri mt-8 h-14 w-full text-[17px]">
         {estado === 'salvando' ? <Loader2 size={18} className="animate-spin" /> : estado === 'ok' ? <><Check size={18} />Salvo</> : 'Salvar alterações'}
@@ -255,7 +383,7 @@ function TrocarSenha() {
   async function trocar(e) {
     e.preventDefault()
     if (s.length < 8) { setMsg('Use pelo menos 8 caracteres.'); return }
-    const { error } = await supabase.auth.updateUser({ password: s })
+    const { error } = await supabase.auth.updateUser({ password: s, data: { senha_definida: true } })
     setMsg(error ? 'Não foi possível trocar.' : 'Senha trocada.'); if (!error) setS('')
   }
   return (
@@ -268,37 +396,58 @@ function TrocarSenha() {
   )
 }
 
-/** Área do dono: edita o próprio lugar e acompanha os contatos que recebeu. */
+/** Área do dono: conta por e-mail, cadastro ou reivindicação do negócio, edição e fotos. */
 export function MeuNegocio() {
   const { carregando, user } = useSessao()
   const [meus, setMeus] = useState(null)
+  const [pedidos, setPedidos] = useState([])
   const [ativo, setAtivo] = useState(null)
-  useEffect(() => {
-    if (!user) { setMeus(null); setAtivo(null); return }
-    supabase.from('business_owners').select('business_id, businesses(id,slug,name,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h,amenities)').eq('user_id', user.id)
-      .then(({ data }) => { const l = (data || []).map(x => x.businesses).filter(Boolean); setMeus(l); setAtivo(l[0] || null) })
+  const [adicionando, setAdicionando] = useState(false)
+  const [nova, setNova] = useState(() => new URLSearchParams(location.search).has('nova'))
+  const [erroLink] = useState(() => /error_code|error=/.test(location.hash) ? 'Esse link venceu ou já foi usado. Peça um novo abaixo.' : '')
+
+  const carregar = useCallback(async (abrirId = null) => {
+    if (!user) return
+    const [{ data: donos }, { data: peds }, { data: cfg }] = await Promise.all([
+      supabase.from('business_owners').select('business_id, businesses(id,slug,name,status,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h,amenities)').eq('user_id', user.id),
+      supabase.from('reivindicacoes').select('id,status,codigo,business_id,criado_em,businesses(name)').eq('user_id', user.id).order('criado_em', { ascending: false }),
+      supabase.from('config').select('valor').eq('chave', 'whatsapp_guia').maybeSingle(),
+    ])
+    const l = (donos || []).map(x => x.businesses).filter(Boolean)
+    const wg = (cfg?.valor || '').replace(/\D/g, '')
+    setMeus(l); setPedidos((peds || []).map(p => ({ ...p, whatsapp_guia: wg })))
+    setAtivo(a => (abrirId && l.find(x => x.id === abrirId)) || (a && l.find(x => x.id === a.id)) || l[0] || null)
+    if (abrirId) setAdicionando(false)
   }, [user])
+  useEffect(() => { if (!user) { setMeus(null); setAtivo(null); setPedidos([]); return } carregar() }, [user, carregar])
+
+  const precisaSenha = user && (nova || !user.user_metadata?.senha_definida)
+  const fimSenha = () => { setNova(false); const u = new URL(location.href); u.searchParams.delete('nova'); u.hash = ''; history.replaceState(null, '', u) }
+  const sair = () => supabase.auth.signOut()
+
+  let conteudo
+  if (carregando) conteudo = <div className="esqueleto mx-5 h-40 rounded-[var(--raio)]" />
+  else if (!user) conteudo = <>{erroLink && <p className="mx-5 mb-3 rounded-2xl bg-[var(--papel)] p-4 text-[15px] font-semibold text-[var(--sos)]">{erroLink}</p>}<Entrar /></>
+  else if (precisaSenha) conteudo = <CriarSenha user={user} onPronto={fimSenha} />
+  else if (meus === null) conteudo = <div className="esqueleto mx-5 h-40 rounded-[var(--raio)]" />
+  else if (meus.length === 0 || adicionando) conteudo = <LigarNegocio pedidos={pedidos} onMudou={carregar} onFechar={meus.length ? () => setAdicionando(false) : null} />
+  else conteudo = (
+    <>
+      {meus.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto px-5 pb-4 scrollbar-hide">
+          {meus.map(m => <button key={m.id} onClick={() => setAtivo(m)} aria-pressed={ativo?.id === m.id} className="chip"><Store size={15} />{m.name}</button>)}
+        </div>
+      )}
+      {ativo && <Editor key={ativo.id} negocio={ativo} />}
+      <button onClick={() => setAdicionando(true)} className="botao botao-sec mx-5 mt-8 w-[calc(100%-2.5rem)]"><Plus size={17} />Adicionar outro negócio</button>
+      <TrocarSenha />
+    </>
+  )
 
   return (
-    <Layout title="Meu negócio" subtitle={user ? user.email : 'Área do responsável'} showBack>
-      {carregando ? <div className="esqueleto mx-5 h-40 rounded-[var(--raio)]" /> : !user ? <Entrar /> : meus === null ? <div className="esqueleto mx-5 h-40 rounded-[var(--raio)]" /> : meus.length === 0 ? (
-        <div className="mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-5">
-          <p className="text-[17px] font-bold">Nenhum negócio ligado a esta conta ainda.</p>
-          <p className="mt-2 text-[15px] leading-relaxed text-[var(--leve)]">Se você acabou de ser aprovado, saia e entre de novo. Se ainda não pediu, vá em <Link to="/anuncie#meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Este negócio é meu</Link>.</p>
-          <button onClick={() => supabase.auth.signOut()} className="botao botao-sec mt-4 w-full"><LogOut size={17} />Sair</button>
-        </div>
-      ) : (
-        <>
-          {meus.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto px-5 pb-4 scrollbar-hide">
-              {meus.map(m => <button key={m.id} onClick={() => setAtivo(m)} aria-pressed={ativo?.id === m.id} className="chip"><Store size={15} />{m.name}</button>)}
-            </div>
-          )}
-          {ativo && <Editor key={ativo.id} negocio={ativo} />}
-          <TrocarSenha />
-          <button onClick={() => supabase.auth.signOut()} className="mx-5 mt-4 flex min-h-12 items-center gap-2 text-[15px] font-bold text-[var(--leve)]"><LogOut size={17} />Sair</button>
-        </>
-      )}
+    <Layout title="Meu negócio" subtitle={user ? user.email : 'Área do dono'} showBack>
+      {conteudo}
+      {user && <button onClick={sair} className="mx-5 mt-4 flex min-h-12 items-center gap-2 text-[15px] font-bold text-[var(--leve)]"><LogOut size={17} />Sair</button>}
     </Layout>
   )
 }

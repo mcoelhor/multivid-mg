@@ -9,7 +9,6 @@ import { FOTOS } from '../data/fotos'
 import { registrar } from '../lib/track'
 
 const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/checkout'
-const FUNCAO_REIV = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/reivindicar'
 const GRATIS = { id: 'free', nome: 'Grátis', preco: 0, beneficios: ['Página com endereço, telefone, WhatsApp e rota', 'Selo “aberto agora” pelo seu horário', 'Aparece na busca e no mapa'] }
 const reais = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })
 
@@ -124,75 +123,13 @@ function Pedido({ plano, onFechar }) {
   )
 }
 
-/** "Este negócio é meu": pedido de acesso do dono, com código de confirmação e consulta de CNPJ. */
-function ReivindicarNegocio() {
-  const [neg, setNeg] = useState({ id: null, name: '' })
-  const [f, setF] = useState({ nome_contato: '', whatsapp: '', email: '', cnpj: '', site_url: '' })
-  const [estado, setEstado] = useState('')
-  const [msg, setMsg] = useState('')
-  const [res, setRes] = useState(null)
-  const set = k => e => setF(v => ({ ...v, [k]: e.target.value }))
-  const campo = 'mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]'
-
-  async function enviar(e) {
-    e.preventDefault()
-    if (!neg.id) { setMsg('Escolha seu negócio na lista. Se ele não aparece, use o cadastro grátis acima.'); return }
-    setEstado('enviando'); setMsg('')
-    try {
-      const r = await fetch(FUNCAO_REIV, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, business_id: neg.id }) })
-      const d = await r.json()
-      if (!r.ok) throw new Error(d.erro || 'Não foi possível enviar.')
-      registrar('lead', { term: 'reivindicacao', businessId: neg.id })
-      setRes(d); setEstado('ok')
-    } catch (err) { setEstado('erro'); setMsg(err.message) }
-  }
-
-  if (estado === 'ok' && res) {
-    const texto = `Código ${res.codigo} — sou responsável por ${res.negocio} no Monte Verde MG.`
-    return (
-      <section className="px-5 pt-12" id="meu-negocio" style={{ scrollMarginTop: 16 }}>
-        <div className="rounded-[var(--raio)] bg-[var(--araucaria)] p-6 text-white">
-          <h2 className="titulo">Falta só confirmar</h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-white/85">Seu código de confirmação:</p>
-          <p className="num mt-1 text-[44px] font-extrabold tracking-[0.08em] text-[var(--broto)]">{res.codigo}</p>
-          {res.whatsapp_guia ? (
-            <>
-              <p className="mt-3 text-[16px] leading-relaxed text-white/85">Mande este código <b className="text-white">pelo WhatsApp do seu negócio</b> (o número que está no guia). É assim que confirmamos que você é o responsável.</p>
-              <a href={`https://wa.me/${res.whatsapp_guia}?text=${encodeURIComponent(texto)}`} target="_blank" rel="noopener noreferrer" className="botao botao-broto mt-5 w-full"><MessageCircle size={18} />Enviar código pelo WhatsApp</a>
-            </>
-          ) : (
-            <p className="mt-3 text-[16px] leading-relaxed text-white/85">Vamos chamar no WhatsApp cadastrado do negócio e pedir este código. Guarde-o.</p>
-          )}
-          {res.cnpj && (
-            <p className="mt-4 text-[14px] leading-relaxed text-white/70">
-              CNPJ consultado: {res.cnpj.nome || 'sem retorno'}{res.cnpj.situacao ? ` · ${res.cnpj.situacao}` : ''}{res.cnpj.confere === true ? ' · nome confere' : res.cnpj.confere === false ? ' · nome não confere com o cadastro, vamos conferir manualmente' : ''}
-            </p>
-          )}
-          <p className="mt-4 text-[14px] leading-relaxed text-white/70">Depois da confirmação você recebe o acesso por WhatsApp e passa a editar horário, fotos e contatos em <b className="text-white">Meu negócio</b>.</p>
-        </div>
-      </section>
-    )
-  }
-
+/** Chamada para a área do dono: cadastro por e-mail, sem senha passando por WhatsApp. */
+function ChamadaDono() {
   return (
     <section className="px-5 pt-12" id="meu-negocio" style={{ scrollMarginTop: 16 }}>
-      <h2 className="titulo flex items-center gap-2"><BadgeCheck size={30} className="text-[var(--musgo)]" />Este negócio é meu</h2>
-      <p className="mt-3 text-[16px] leading-relaxed text-[var(--leve)]">Já está no guia? Confirme que é o responsável e edite horário, fotos, descrição e contatos quando quiser. Verificação por código no WhatsApp do negócio e, se quiser, pelo CNPJ.</p>
-      <form onSubmit={enviar} className="mt-5 rounded-[var(--raio)] bg-[var(--papel)] p-5">
-        <div className="space-y-4">
-          <EscolheNegocio valor={neg} onChange={setNeg} />
-          <div><label className="block text-[15px] font-bold" htmlFor="rn">Seu nome</label><input id="rn" required value={f.nome_contato} onChange={set('nome_contato')} autoComplete="name" className={campo} /></div>
-          <div><label className="block text-[15px] font-bold" htmlFor="rw">Seu WhatsApp com DDD</label><input id="rw" required inputMode="tel" autoComplete="tel" value={f.whatsapp} onChange={set('whatsapp')} placeholder="(35) 9 9999-9999" className={campo} /></div>
-          <div><label className="block text-[15px] font-bold" htmlFor="re">E-mail (será seu login)</label><input id="re" type="email" required autoComplete="email" value={f.email} onChange={set('email')} className={campo} /></div>
-          <div><label className="block text-[15px] font-bold" htmlFor="rc">CNPJ <span className="font-medium text-[var(--leve)]">(opcional, acelera a verificação)</span></label><input id="rc" inputMode="numeric" value={f.cnpj} onChange={set('cnpj')} placeholder="00.000.000/0001-00" className={campo} /></div>
-          <input tabIndex={-1} aria-hidden="true" value={f.site_url} onChange={set('site_url')} className="absolute -left-[9999px] h-0 w-0" />
-        </div>
-        {msg && <p className="mt-4 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
-        <button disabled={estado === 'enviando'} className="botao botao-pri mt-5 h-14 w-full text-[17px]">
-          {estado === 'enviando' ? <><Loader2 size={18} className="animate-spin" />Enviando…</> : <>Pedir acesso <ArrowRight size={18} /></>}
-        </button>
-        <p className="mt-3 text-[14px] text-[var(--leve)]">Já tem acesso? <Link to="/meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Entrar em Meu negócio</Link>.</p>
-      </form>
+      <h2 className="titulo flex items-center gap-2"><BadgeCheck size={30} className="text-[var(--musgo)]" />Área do dono</h2>
+      <p className="mt-3 text-[16px] leading-relaxed text-[var(--leve)]">Coloque seu e-mail, confirme pelo link que chega e crie sua senha. Depois é só cadastrar o negócio (ou assumir a página que já existe) e pôr as fotos.</p>
+      <Link to="/meu-negocio" className="botao botao-pri mt-5 h-14 w-full text-[17px]">Entrar ou criar conta <ArrowRight size={18} /></Link>
     </section>
   )
 }
@@ -230,7 +167,7 @@ export function Anuncie() {
         </ul>
       </section>
 
-      <ReivindicarNegocio />
+      <ChamadaDono />
 
       <section className="px-5 pt-12" id="planos" style={{ scrollMarginTop: 16 }}>
         <h2 className="titulo">Planos</h2>
@@ -255,7 +192,7 @@ export function Anuncie() {
                     ))}
                   </ul>
                   {p.id === 'free' ? (
-                    <Link to="/mais#cadastro" className="botao botao-sec mt-6 w-full">Cadastrar grátis</Link>
+                    <Link to="/meu-negocio" className="botao botao-sec mt-6 w-full">Cadastrar grátis</Link>
                   ) : (
                     <button onClick={() => setEscolhido(p)} className={`botao mt-6 w-full ${forte ? 'botao-claro' : 'botao-pri'}`}>Quero o {p.nome} <ArrowRight size={18} /></button>
                   )}
@@ -264,7 +201,7 @@ export function Anuncie() {
             })}
           </div>
         )}
-        <p className="mt-5 text-[15px] leading-relaxed text-[var(--leve)]">Planos pagos aparecem sempre identificados como Destaque ou Parceiro. Cancelar é só não renovar: no fim do período, a página volta ao plano grátis.</p>
+        <p className="mt-5 text-[15px] leading-relaxed text-[var(--leve)]">Sem fidelidade. Cancelar é só não renovar: no fim do período, a página volta ao plano grátis.</p>
       </section>
     </Layout>
   )

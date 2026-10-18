@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Heart, Calendar, Store, Settings, ArrowRight, Download, Route, Siren, Image, Car, Leaf, Ticket, Shield } from 'lucide-react'
-import { Autocadastro } from '../components/Autocadastro'
 import { Layout } from '../components/Layout/Layout'
 import { LeadForm } from '../components/LeadForm'
 import { useInstalar } from '../hooks/useInstalar'
@@ -47,9 +46,9 @@ export function More() {
       </div>
 
       <section id="cadastro" className="px-5 pt-12" style={{ scrollMarginTop: 90 }}>
-        <h2 className="titulo">Cadastro grátis</h2>
-        <p className="mb-4 mt-2 text-[16px] leading-relaxed text-[var(--leve)]">Tem comércio ou serviço em Monte Verde? Preencha e sua página entra no ar depois de uma conferência rápida, sem custo.</p>
-        <Autocadastro />
+        <h2 className="titulo">Tem um negócio na vila?</h2>
+        <p className="mt-2 text-[16px] leading-relaxed text-[var(--leve)]">Cadastro grátis: entre com seu e-mail, confirme pelo link e cadastre seu negócio com fotos.</p>
+        <button onClick={() => navigate('/meu-negocio')} className="botao botao-pri mt-4 w-full">Cadastrar meu negócio</button>
       </section>
 
       <section id="corrigir" className="px-5 pt-12" style={{ scrollMarginTop: 90 }}>

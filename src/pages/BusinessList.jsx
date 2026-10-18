@@ -163,7 +163,7 @@ export function BusinessList() {
       )}
 
       <p className="px-5 pt-6 text-[15px] text-[var(--leve)]">
-        Seu negócio não está aqui? <Link to="/mais#cadastro" className="inline-flex min-h-11 items-center font-bold text-[var(--musgo)] underline underline-offset-4">Cadastre grátis</Link>.
+        Seu negócio não está aqui? <Link to="/meu-negocio" className="inline-flex min-h-11 items-center font-bold text-[var(--musgo)] underline underline-offset-4">Cadastre grátis</Link>.
       </p>
     </Layout>
   )

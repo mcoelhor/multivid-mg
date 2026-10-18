@@ -1,17 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Check, Loader2, ArrowRight } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { CATEGORIES } from '../data/categories'
 import { DIAS, DIAS_NOME } from '../lib/horario'
 import { registrar } from '../lib/track'
 import { evento } from '../lib/marketing'
-
-const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/cadastrar-negocio'
+import { chamarComLogin } from '../lib/funcoes'
 const campo = 'mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]'
 
-/** Cadastro grátis feito pelo próprio comerciante. Entra fora do ar até o guia aprovar. */
-export function Autocadastro() {
-  const [f, setF] = useState({ name: '', category: 'alimentacao', subcategory: 'restaurantes', address: '', whatsapp: '', phone: '', description: '', contato: '', email: '', site_url: '', hours: {} })
+/** Cadastro grátis feito pelo dono já logado. Entra fora do ar até o guia conferir; as fotos ele põe em seguida. */
+export function Autocadastro({ onPronto }) {
+  const [f, setF] = useState({ name: '', category: 'alimentacao', subcategory: 'restaurantes', address: '', whatsapp: '', phone: '', description: '', contato: '', site_url: '', hours: {} })
   const [estado, setEstado] = useState('')
   const [msg, setMsg] = useState('')
   const set = k => e => setF(v => ({ ...v, [k]: e.target.value }))
@@ -21,11 +19,9 @@ export function Autocadastro() {
   async function enviar(e) {
     e.preventDefault(); setMsg(''); setEstado('enviando')
     try {
-      const r = await fetch(FUNCAO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(f) })
-      const d = await r.json()
-      if (!r.ok) throw new Error(d.erro || 'Não foi possível cadastrar.')
+      const d = await chamarComLogin('cadastrar-negocio', f)
       registrar('lead', { term: 'autocadastro' }); evento('lead', { content_name: 'autocadastro' })
-      setEstado('ok')
+      setEstado('ok'); onPronto?.(d)
     } catch (err) { setEstado('erro'); setMsg(err.message) }
   }
 
@@ -33,8 +29,7 @@ export function Autocadastro() {
     return (
       <div className="rounded-[var(--raio)] bg-[var(--araucaria)] p-6 text-white">
         <p className="flex items-center gap-2 text-[22px] font-extrabold tracking-[-0.02em]"><Check size={24} className="text-[var(--broto)]" />Cadastro recebido</p>
-        <p className="mt-2 text-[16px] leading-relaxed text-white/85">Conferimos os dados e colocamos sua página no ar, normalmente em até 2 dias úteis. Você recebe um WhatsApp quando estiver publicada, com o link para assumir a página e editar quando quiser.</p>
-        <Link to="/anuncie#planos" className="botao botao-broto mt-5 w-full">Ver os planos de destaque <ArrowRight size={18} /></Link>
+        <p className="mt-2 text-[16px] leading-relaxed text-white/85">Conferimos os dados e colocamos sua página no ar, normalmente em até 2 dias úteis. Enquanto isso, já dá para pôr as fotos.</p>
       </div>
     )
   }
@@ -60,15 +55,12 @@ export function Autocadastro() {
             {DIAS.map(d => <label key={d} className="flex items-center gap-2"><span className="w-16 text-[14px] font-semibold">{DIAS_NOME[d].slice(0, 3)}</span><input value={f.hours[d] || ''} onChange={setH(d)} placeholder="08:00-18:00" className="min-w-0 flex-1 rounded-2xl bg-[var(--nevoa)] px-4 py-2.5 text-[15px]" /></label>)}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div><label className="block text-[15px] font-bold" htmlFor="ar">Seu nome</label><input id="ar" required value={f.contato} onChange={set('contato')} autoComplete="name" className={campo} /></div>
-          <div><label className="block text-[15px] font-bold" htmlFor="am">Seu e-mail</label><input id="am" type="email" value={f.email} onChange={set('email')} autoComplete="email" className={campo} /></div>
-        </div>
+        <div><label className="block text-[15px] font-bold" htmlFor="ar">Seu nome</label><input id="ar" required value={f.contato} onChange={set('contato')} autoComplete="name" className={campo} /></div>
         <input tabIndex={-1} aria-hidden="true" value={f.site_url} onChange={set('site_url')} className="absolute -left-[9999px] h-0 w-0" />
       </div>
       {msg && <p className="mt-4 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
       <button disabled={estado === 'enviando'} className="botao botao-pri mt-5 h-14 w-full text-[17px]">{estado === 'enviando' ? <Loader2 size={18} className="animate-spin" /> : 'Enviar cadastro grátis'}</button>
-      <p className="mt-3 text-[14px] leading-snug text-[var(--leve)]">Já está no guia? Use <Link to="/anuncie#meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Este negócio é meu</Link>. Ao enviar, você autoriza o contato pelos dados informados.</p>
+      <p className="mt-3 text-[14px] leading-snug text-[var(--leve)]">Ao enviar, você autoriza o contato pelos dados informados.</p>
     </form>
   )
 }

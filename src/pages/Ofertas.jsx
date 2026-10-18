@@ -16,7 +16,7 @@ export function Ofertas() {
         {!carregado ? <div className="esqueleto h-32 rounded-[var(--raio)]" /> : lista.length === 0 ? (
           <div className="rounded-[var(--raio)] bg-[var(--papel)] p-6">
             <p className="text-[18px] font-bold">Nenhuma oferta ativa agora.</p>
-            <p className="mt-2 text-[15px] leading-relaxed text-[var(--leve)]">As ofertas são criadas pelos próprios estabelecimentos verificados. Tem um negócio na vila? <Link to="/anuncie#meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Confirme que é seu</Link> e publique a sua.</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-[var(--leve)]">As ofertas são criadas pelos próprios estabelecimentos verificados. Tem um negócio na vila? <Link to="/meu-negocio" className="font-bold text-[var(--musgo)] underline underline-offset-4">Confirme que é seu</Link> e publique a sua.</p>
           </div>
         ) : (
           <div className="space-y-3">{lista.map((o, k) => <div key={o.id} className="entra" style={{ '--i': k }}><CartaoOferta oferta={o} lugar={porId.get(o.business_id)} mostrarLugar /></div>)}</div>

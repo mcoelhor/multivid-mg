@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MessageCircle, Check, X, BadgeCheck, RefreshCcw } from 'lucide-react'
+import { MessageCircle, Check, X, BadgeCheck } from 'lucide-react'
 import { AdminLayout } from './AdminLayout'
 import { supabase } from '../lib/supabase'
 
@@ -21,13 +21,13 @@ function Pedido({ p, onMudou }) {
   let wa = (p.whatsapp || '').replace(/\D/g, ''); if (wa.length === 10 || wa.length === 11) wa = '55' + wa
   const nome = p.businesses?.name || '?'
   const msgPedido = `Olá, ${p.nome_contato.split(' ')[0]}! Aqui é do Monte Verde MG. Recebemos seu pedido de acesso a ${nome}. Para confirmar, responda com o código que apareceu na tela, pelo WhatsApp do negócio.`
-  const msgAcesso = acesso ? `Pronto, ${p.nome_contato.split(' ')[0]}! Seu acesso a ${nome} no Monte Verde MG:\nAcesse monteverdemg.com.br/meu-negocio\nE-mail: ${acesso.email}\nSenha: ${acesso.senha}\nTroque a senha na primeira entrada. Lá você edita horário, fotos e contatos.` : ''
+  const msgAcesso = acesso ? `Pronto, ${p.nome_contato.split(' ')[0]}! ${nome} já está ligado à sua conta no Monte Verde MG. Entre em monteverdemg.com.br/meu-negocio com o e-mail ${acesso.email}${acesso.convite ? ' (mandamos um convite para você criar a senha)' : ''} e edite horário, fotos e contatos.` : ''
 
   async function decidir(acao) {
     setEnviando(true); setErro('')
     try {
       const d = await chamar({ acao, id: p.id })
-      if (acao === 'aprovar') setAcesso({ email: d.email, senha: d.senha })
+      if (acao === 'aprovar') setAcesso({ email: d.email, convite: d.convite })
       onMudou()
     } catch (e) { setErro(e.message) }
     setEnviando(false)
@@ -38,7 +38,7 @@ function Pedido({ p, onMudou }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[16px] font-bold leading-tight">{nome}</p>
-          <p className="text-[13px] text-[#626a63]">{p.nome_contato} · {p.whatsapp} · {p.email}</p>
+          <p className="text-[13px] text-[#626a63]">{p.nome_contato} · {p.whatsapp} · {p.email}{p.user_id ? ' · e-mail confirmado' : ''}</p>
           <p className="text-[12px] text-[#8a918b]">{data(p.criado_em)} · código <b className="num">{p.codigo}</b></p>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${p.status === 'verificada' ? 'bg-[#dcefdc] text-[#1d5f31]' : p.status === 'recusada' ? 'bg-[#f2e1dd] text-[#8a3b2e]' : 'bg-[#f3e8cc] text-[#6e5208]'}`}>{p.status}</span>
@@ -57,13 +57,10 @@ function Pedido({ p, onMudou }) {
       )}
       {acesso && (
         <div className="mt-3 rounded-xl bg-[var(--creme)] p-3">
-          <p className="text-[13px] font-bold">Acesso criado. Mande pelo WhatsApp (a senha só aparece agora):</p>
-          <textarea readOnly rows={5} value={msgAcesso} className="mt-1 w-full rounded-xl bg-white p-2 text-[12px]" onFocus={e => e.target.select()} />
+          <p className="text-[13px] font-bold">Aprovado. O dono já vê o negócio na conta dele. Se quiser, avise pelo WhatsApp:</p>
+          <textarea readOnly rows={4} value={msgAcesso} className="mt-1 w-full rounded-xl bg-white p-2 text-[12px]" onFocus={e => e.target.select()} />
           {wa.length >= 12 && <a href={`https://wa.me/${wa}?text=${encodeURIComponent(msgAcesso)}`} target="_blank" rel="noopener noreferrer" className="botao botao-wa mt-2 h-10 min-h-0 w-full text-[14px]"><MessageCircle size={15} />Enviar acesso</a>}
         </div>
-      )}
-      {p.status === 'verificada' && !acesso && (
-        <button disabled={enviando} onClick={async () => { setEnviando(true); try { const d = await chamar({ acao: 'reenviar', email: p.email, business_id: p.business_id }); setAcesso({ email: p.email, senha: d.senha }) } catch (e) { setErro(e.message) } setEnviando(false) }} className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-[var(--verde)]"><RefreshCcw size={13} />Gerar senha nova</button>
       )}
       {erro && <p className="mt-2 text-[13px] font-semibold text-[var(--sos)]">{erro}</p>}
     </li>
@@ -89,7 +86,7 @@ export function AdminReivindicacoes() {
     <AdminLayout>
       <section className="rounded-2xl bg-white p-4">
         <h2 className="flex items-center gap-2 font-bold"><BadgeCheck size={18} className="text-[var(--verde)]" />Como funciona a verificação</h2>
-        <p className="mt-1 text-[13px] text-[#626a63]">O dono vê um código na tela e manda pelo WhatsApp do negócio para o número abaixo. Se a mensagem veio do número que está no guia (ou do WhatsApp do pedido) e o código bate, aprove: o acesso é criado na hora e você envia por WhatsApp. O CNPJ, quando informado, é consultado na Receita e comparado com o nome.</p>
+        <p className="mt-1 text-[13px] text-[#626a63]">O dono vê um código na tela e manda pelo WhatsApp do negócio para o número abaixo. Se a mensagem veio do número que está no guia (ou do WhatsApp do pedido) e o código bate, aprove: o negócio passa na hora para a conta do dono (ele já confirmou o e-mail e criou a senha). O CNPJ, quando informado, é consultado na Receita e comparado com o nome.</p>
         <label className="mt-3 block text-[13px] font-bold">WhatsApp do guia (com DDD, só números)</label>
         <div className="mt-1 flex gap-2">
           <input value={cfg} onChange={e => setCfg(e.target.value)} inputMode="tel" placeholder="5535999999999" className="min-w-0 flex-1 rounded-xl bg-[var(--creme)] px-3 py-2.5 text-sm" />
@@ -100,7 +97,7 @@ export function AdminReivindicacoes() {
 
       <h2 className="mt-5 text-[18px] font-extrabold">Pedidos {pendentes.length ? <span className="num text-[var(--sos)]">· {pendentes.length} pendentes</span> : null}</h2>
       {lista === null ? <div className="esqueleto mt-3 h-24 rounded-2xl" /> : lista.length === 0 ? (
-        <p className="mt-3 rounded-2xl bg-white p-4 text-sm text-[#626a63]">Nenhum pedido ainda. Eles chegam por "Este negócio é meu", na página Anuncie.</p>
+        <p className="mt-3 rounded-2xl bg-white p-4 text-sm text-[#626a63]">Nenhum pedido ainda. Eles chegam pela área do dono (Meu negócio → Já está no guia).</p>
       ) : (
         <ul className="mt-3 space-y-2">{lista.map(p => <Pedido key={p.id} p={p} onMudou={carregar} />)}</ul>
       )}

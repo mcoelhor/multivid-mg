@@ -54,6 +54,8 @@ html, body {
   margin: 0; padding: 0;
   -webkit-font-smoothing: antialiased;
 }
+/* Nada pode alargar a página: no celular com fonte ou zoom maiores, um elemento largo empurrava a tela para o lado. */
+html { overflow-x: hidden; }
 
 /* No computador, o app fica como uma coluna de celular sobre a serra */
 body {
@@ -62,6 +64,7 @@ body {
 #root {
   max-width: 480px; margin: 0 auto; min-height: 100dvh; position: relative;
   background: var(--nevoa);
+  overflow-x: clip;
 }
 @media (min-width: 900px) {
   #root { margin: 0 0 0 max(6vw, calc(50vw - 560px)); }
@@ -94,7 +97,8 @@ button { user-select: none; -webkit-user-select: none; cursor: pointer; font: in
 .botao {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 48px; padding: 0 20px; border-radius: 999px;
-  font-weight: 700; font-size: 16px; white-space: nowrap;
+  font-weight: 700; font-size: 16px; line-height: 1.15; text-align: center;
+  min-width: 0; padding-block: 6px;
   transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease, color var(--t-hover) ease;
 }
 .botao:active, .pressiona:active { transform: scale(0.97); }
