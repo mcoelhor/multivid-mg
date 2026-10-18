@@ -1,159 +1,113 @@
-import { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
-import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { Search, X, Clock, Siren } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
 import { BusinessCard } from '../components/UI/BusinessCard'
-import { LoadingSpinner } from '../components/UI/LoadingSpinner'
+import { Icon } from '../components/UI/Icon'
+import { ContatoLinha } from '../components/ContatoLinha'
+import { Parceiros } from '../components/Parceiros'
 import { useBusinesses } from '../hooks/useBusinesses'
 import { CATEGORIES } from '../data/categories'
+import { SITUACOES, ehObra } from '../lib/busca'
+import { registrar } from '../lib/track'
 
-function FilterChips({ category, activeSubcat, onSubcat }) {
-  const cat = CATEGORIES.find(c => c.slug === category)
-  if (!cat) return null
-  return (
-    <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
-      <button
-        onClick={() => onSubcat(null)}
-        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-          !activeSubcat
-            ? 'text-white'
-            : 'bg-white text-gray-600 border border-gray-200'
-        }`}
-        style={!activeSubcat ? { background: '#14532d' } : {}}
-      >
-        Todos
-      </button>
-      {cat.subcategories.map(sub => (
-        <button
-          key={sub.id}
-          onClick={() => onSubcat(sub.slug)}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            activeSubcat === sub.slug
-              ? 'text-white'
-              : 'bg-white text-gray-600 border border-gray-200'
-          }`}
-          style={activeSubcat === sub.slug ? { background: '#14532d' } : {}}
-        >
-          <span>{sub.icon}</span>
-          {sub.name}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function SortBar({ sort, onSort, openNow, onOpenNow }) {
-  return (
-    <div className="flex items-center gap-2 px-4 pb-3">
-      <button
-        onClick={onOpenNow}
-        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-          openNow ? 'border-green-700 text-green-800 bg-green-50' : 'border-gray-200 text-gray-600 bg-white'
-        }`}
-      >
-        <span className={`w-2 h-2 rounded-full ${openNow ? 'bg-green-500' : 'bg-gray-300'}`} />
-        Aberto agora
-      </button>
-      <button
-        onClick={() => onSort(sort === 'rating' ? 'featured' : 'rating')}
-        className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600"
-      >
-        {sort === 'rating' ? '⭐ Mais avaliados' : '✨ Destaques'} <ChevronDown size={12} />
-      </button>
-    </div>
-  )
-}
+const URGENTES = ['farmacias', 'pronto-socorro', 'hospitais', 'dentistas', 'clinicas', 'oficinas', 'borracharias', 'postos', 'taxis', 'veterinarios', 'utilidade-publica']
 
 export function BusinessList() {
   const { category, subcategory } = useParams()
-  const [searchParams] = useSearchParams()
+  const [params] = useSearchParams()
   const navigate = useNavigate()
-  const searchQuery = searchParams.get('q') || ''
+  const q = params.get('q') || ''
+  const situacao = SITUACOES.find(s => s.id === q)
 
-  const [activeSubcat, setActiveSubcat] = useState(subcategory || null)
+  const [sub, setSub] = useState(subcategory || null)
   const [openNow, setOpenNow] = useState(false)
-  const [sort, setSort] = useState('featured')
-  const [localSearch, setLocalSearch] = useState(searchQuery)
+  const [texto, setTexto] = useState(q)
+  useEffect(() => { setSub(subcategory || null) }, [subcategory])
+  useEffect(() => { setTexto(q) }, [q])
 
-  useEffect(() => { setActiveSubcat(subcategory || null) }, [subcategory])
-  useEffect(() => { setLocalSearch(searchQuery) }, [searchQuery])
+  const { businesses: todos, loading, error } = useBusinesses({ category, search: q || undefined })
+  const lista = todos
+    .filter(b => !sub || b.subcategory === sub)
+    .filter(b => !openNow || b.st.estado === 'aberto')
 
-  const { businesses, loading } = useBusinesses({
-    category,
-    subcategory: activeSubcat,
-    search: localSearch || undefined,
-    openNow,
-    sortBy: sort,
-  })
+  // Registra a busca uma vez por termo, com quantos resultados teve (as sem resultado viram lista de pendências)
+  const ultimo = useRef('')
+  useEffect(() => {
+    if (q && !loading && ultimo.current !== q) { ultimo.current = q; registrar('busca', { term: q, results: todos.length }) }
+  }, [q, loading, todos.length])
 
   const cat = CATEGORIES.find(c => c.slug === category)
-  const title = searchQuery
-    ? `Busca: "${searchQuery}"`
-    : cat
-    ? cat.name
-    : 'Estabelecimentos'
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (localSearch.trim()) navigate(`/busca?q=${encodeURIComponent(localSearch.trim())}`)
-  }
+  const subsPresentes = cat ? cat.subcategories.filter(s => todos.some(b => b.subcategory === s.id)) : []
+  const abertos = todos.filter(b => b.st.estado === 'aberto').length
+  const urgente = q && lista[0] && URGENTES.includes(lista[0].subcategory)
+  const titulo = situacao ? situacao.rotulo : q ? `“${q}”` : cat ? cat.name : 'Buscar'
 
   return (
-    <Layout title={title} showBack subtitle={cat?.description}>
+    <Layout title={titulo} showBack subtitle={q ? 'Resultados da busca' : cat?.description}>
       <div className="pt-3">
-        {searchQuery && (
-          <form onSubmit={handleSearch} className="px-4 pb-3">
+        {(q || !category) && (
+          <form onSubmit={e => { e.preventDefault(); if (texto.trim()) navigate(`/busca?q=${encodeURIComponent(texto.trim())}`, { replace: true }) }} className="px-4 pb-3" role="search">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="search"
-                value={localSearch}
-                onChange={e => setLocalSearch(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full pl-9 pr-9 py-2.5 bg-white rounded-xl text-sm border border-gray-200 text-gray-800"
-              />
-              {localSearch && (
-                <button type="button" onClick={() => setLocalSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X size={14} className="text-gray-400" />
+              <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8a918b]" />
+              <input type="search" enterKeyHint="search" value={texto} onChange={e => setTexto(e.target.value)} autoFocus={!q}
+                placeholder="O que você precisa?" aria-label="Buscar"
+                className="w-full rounded-xl bg-white py-3 pl-10 pr-10 text-[15px] shadow-[inset_0_0_0_1px_rgba(23,36,28,0.08)]" />
+              {texto && (
+                <button type="button" onClick={() => setTexto('')} className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center" aria-label="Limpar">
+                  <X size={15} className="text-[#8a918b]" />
                 </button>
               )}
             </div>
           </form>
         )}
 
-        {category && (
-          <FilterChips
-            category={category}
-            activeSubcat={activeSubcat}
-            onSubcat={setActiveSubcat}
-          />
-        )}
-
-        <SortBar
-          sort={sort}
-          onSort={setSort}
-          openNow={openNow}
-          onOpenNow={() => setOpenNow(v => !v)}
-        />
-
-        {loading ? (
-          <LoadingSpinner />
-        ) : businesses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-            <span className="text-5xl mb-4">🔍</span>
-            <p className="text-gray-600 font-medium">Nenhum resultado encontrado</p>
-            <p className="text-sm text-gray-400 mt-1">Tente outros termos ou categorias</p>
-          </div>
-        ) : (
-          <div className="px-4 space-y-4 pb-4">
-            <p className="text-xs text-gray-400 font-medium">
-              {businesses.length} estabelecimento{businesses.length !== 1 ? 's' : ''} encontrado{businesses.length !== 1 ? 's' : ''}
-            </p>
-            {businesses.map(b => (
-              <BusinessCard key={b.id} business={b} />
+        {cat && subsPresentes.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
+            <button onClick={() => setSub(null)} aria-pressed={!sub} className="chip">Todos</button>
+            {subsPresentes.map(s => (
+              <button key={s.id} onClick={() => setSub(sub === s.id ? null : s.id)} aria-pressed={sub === s.id} className="chip">
+                <Icon name={s.icon} size={14} />{s.name}
+              </button>
             ))}
           </div>
         )}
+
+        {(cat || q) && todos.length > 0 && (
+          <div className="flex items-center gap-2 px-4 pb-3">
+            <button onClick={() => setOpenNow(v => !v)} aria-pressed={openNow} className="chip"><Clock size={14} />Aberto agora</button>
+            <span className="text-xs text-[#626a63]">{lista.length} lugares{abertos ? ` · ${abertos} abertos` : ''}</span>
+          </div>
+        )}
+
+        {q && ehObra(q) && <Parceiros contexto="busca" />}
+        {cat && (category === 'construcao' || category === 'imobiliarias') && !q && <Parceiros contexto={category} />}
+
+        {loading ? (
+          <div className="space-y-3 px-4">{[0, 1, 2].map(i => <div key={i} className="esqueleto h-52 rounded-2xl" />)}</div>
+        ) : error ? (
+          <p className="mx-4 rounded-2xl bg-white p-4 text-sm text-[#8a3b2e]">Sem conexão. Tente de novo em instantes.</p>
+        ) : !q && !category ? (
+          <div className="grid grid-cols-2 gap-2 px-4">
+            {SITUACOES.map(s => (
+              <Link key={s.id} to={`/busca?q=${s.id}`} className="pressiona flex items-center gap-2 rounded-2xl bg-white p-3.5 text-sm font-semibold"><Icon name={s.icone} size={17} className="text-[var(--verde)]" />{s.rotulo}</Link>
+            ))}
+          </div>
+        ) : lista.length === 0 ? (
+          <div className="mx-4 rounded-2xl bg-white p-5 text-center">
+            <p className="font-semibold">{openNow ? 'Nada aberto neste filtro agora.' : `Ainda não temos cadastro para “${q}”.`}</p>
+            {!openNow && <p className="mt-1 text-sm text-[#626a63]">Anotamos sua busca para incluir.</p>}
+            <Link to="/sos" className="botao botao-sos mt-4 w-full"><Siren size={16} />Contatos de emergência</Link>
+          </div>
+        ) : urgente ? (
+          <ul className="space-y-2 px-4 pb-4">{lista.slice(0, 30).map((b, i) => <ContatoLinha key={b.id} b={b} index={i} />)}</ul>
+        ) : (
+          <div className="space-y-3 px-4 pb-4">{lista.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
+        )}
+
+        <p className="px-4 pb-2 pt-4 text-[13px] text-[#626a63]">
+          Seu negócio não está aqui? <Link to="/anuncie" className="font-semibold text-[var(--verde)] underline">Cadastre grátis</Link>.
+        </p>
       </div>
     </Layout>
   )

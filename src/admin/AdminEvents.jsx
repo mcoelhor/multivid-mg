@@ -1,82 +1,58 @@
-import { useState } from 'react'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { AdminLayout } from './AdminLayout'
-import { MOCK_EVENTS } from '../data/mockData'
+import { supabase } from '../lib/supabase'
 
-const CATEGORY_LABELS = {
-  musica: '🎵 Música', gastronomia: '🍽 Gastronomia', festival: '🎉 Festival',
-  turismo: '🏔 Turismo', feiras: '🛍 Feiras', cultura: '🎭 Cultura',
-}
-
-function formatDate(dateStr) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
+const VAZIO = { title: '', description: '', category: 'cultura', date_start: '', date_end: '', time_start: '', location: '', image_url: '', link: '', active: true }
 
 export function AdminEvents() {
-  const [events, setEvents] = useState(MOCK_EVENTS)
-  const [search, setSearch] = useState('')
+  const [lista, setLista] = useState(null)
+  const [novo, setNovo] = useState(null)
+  const [erro, setErro] = useState('')
+  const carregar = () => supabase.from('events').select('*').order('date_start', { ascending: false }).then(({ data }) => setLista(data || []))
+  useEffect(() => { carregar() }, [])
+  const set = k => e => setNovo(v => ({ ...v, [k]: e.target.value }))
 
-  const filtered = events.filter(e =>
-    e.title.toLowerCase().includes(search.toLowerCase()) ||
-    e.location.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const toggleActive = (id) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, active: !e.active } : e))
+  async function salvar() {
+    if (!novo.title || !novo.date_start) return setErro('Informe título e data.')
+    const { error } = await supabase.from('events').insert({ ...novo, date_end: novo.date_end || null })
+    if (error) return setErro(error.message)
+    setNovo(null); setErro(''); carregar()
   }
+  async function alternar(ev) { await supabase.from('events').update({ active: !ev.active }).eq('id', ev.id); carregar() }
 
+  const campo = 'w-full rounded-xl bg-[var(--creme)] px-3 py-2.5 text-sm'
   return (
     <AdminLayout>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-800">Eventos</h2>
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-sm font-semibold" style={{ background: '#14532d' }}>
-            <Plus size={16} /> Novo
-          </button>
+      {!novo ? (
+        <button onClick={() => setNovo({ ...VAZIO })} className="botao botao-pri w-full"><Plus size={16} />Novo evento</button>
+      ) : (
+        <div className="entra space-y-2.5 rounded-2xl bg-white p-4">
+          <input className={campo} placeholder="Título" value={novo.title} onChange={set('title')} />
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs text-[#626a63]">Início<input type="date" className={campo} value={novo.date_start} onChange={set('date_start')} /></label>
+            <label className="text-xs text-[#626a63]">Fim<input type="date" className={campo} value={novo.date_end} onChange={set('date_end')} /></label>
+          </div>
+          <input className={campo} placeholder="Horário (ex.: 19h)" value={novo.time_start} onChange={set('time_start')} />
+          <input className={campo} placeholder="Local" value={novo.location} onChange={set('location')} />
+          <select className={campo} value={novo.category} onChange={set('category')}>
+            {['musica', 'gastronomia', 'festival', 'turismo', 'feiras', 'cultura'].map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <textarea className={campo} rows={2} placeholder="Descrição" value={novo.description} onChange={set('description')} />
+          <input className={campo} placeholder="Link da imagem (opcional)" value={novo.image_url} onChange={set('image_url')} />
+          <input className={campo} placeholder="Link de ingressos ou site (opcional)" value={novo.link} onChange={set('link')} />
+          {erro && <p className="text-sm text-[#8a3b2e]">{erro}</p>}
+          <div className="flex gap-2"><button onClick={() => setNovo(null)} className="botao botao-sec flex-1">Cancelar</button><button onClick={salvar} className="botao botao-pri flex-1">Salvar</button></div>
         </div>
-
-        <input
-          type="search"
-          placeholder="Buscar eventos..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full px-4 py-2.5 bg-white rounded-xl border border-gray-200 text-sm"
-        />
-
-        <div className="space-y-3">
-          {filtered.map(ev => (
-            <div key={ev.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-              {ev.image && <img src={ev.image} alt={ev.title} className="w-full h-32 object-cover" />}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1">{ev.title}</h3>
-                  <button
-                    onClick={() => toggleActive(ev.id)}
-                    className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      ev.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                    }`}
-                  >
-                    {ev.active ? 'Ativo' : 'Inativo'}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {CATEGORY_LABELS[ev.category] || ev.category} · {formatDate(ev.date_start)}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">📍 {ev.location}</p>
-                <div className="flex gap-2 mt-3 pt-2 border-t border-gray-50">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-semibold">
-                    <Edit2 size={12} /> Editar
-                  </button>
-                  <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 text-red-500 text-xs font-semibold">
-                    <Trash2 size={12} /> Excluir
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
+      <ul className="mt-3 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white">
+        {lista === null ? <li className="esqueleto h-20" /> : lista.length === 0 ? <li className="p-4 text-sm text-[#626a63]">Nenhum evento cadastrado.</li> : lista.map(ev => (
+          <li key={ev.id} className="flex items-center gap-3 p-3.5">
+            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{ev.title}</span><span className="text-[11px] text-[#626a63]">{new Date(ev.date_start + 'T12:00').toLocaleDateString('pt-BR')} · {ev.location}</span></span>
+            <button onClick={() => alternar(ev)} className="chip">{ev.active ? 'Visível' : 'Oculto'}</button>
+          </li>
+        ))}
+      </ul>
     </AdminLayout>
   )
 }

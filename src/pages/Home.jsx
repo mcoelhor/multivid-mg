@@ -1,58 +1,58 @@
-import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, ChevronRight, Flame } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { Search, ChevronRight, Siren, Phone } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
 import { BusinessCard } from '../components/UI/BusinessCard'
 import { EventCard } from '../components/UI/EventCard'
+import { Icon } from '../components/UI/Icon'
+import { ContatoLinha } from '../components/ContatoLinha'
+import { Parceiros } from '../components/Parceiros'
 import { useBusinesses } from '../hooks/useBusinesses'
 import { useEvents } from '../hooks/useEvents'
-import { HOME_ACTIONS } from '../data/categories'
-import { MOCK_PROMOTIONS } from '../data/mockData'
+import { CATEGORIES } from '../data/categories'
+import { SITUACOES } from '../lib/busca'
+import { agoraMV, DIAS_NOME, DIAS, hhmm } from '../lib/horario'
+import { linkTel, registrar } from '../lib/track'
 
-function SearchBar() {
+const ATALHOS = [
+  ['Farmácia', 'Pill', 'farmacia'], ['Médico', 'Stethoscope', 'medico'], ['Dentista', 'Stethoscope', 'dentista'],
+  ['Mecânico', 'Wrench', 'mecanico'], ['Pneu', 'CircleDot', 'pneu'], ['Táxi', 'CarTaxiFront', 'taxi'],
+  ['Jantar', 'UtensilsCrossed', 'jantar'], ['Café', 'Coffee', 'cafe'], ['Mercado', 'ShoppingCart', 'mercado'],
+  ['Caixa 24h', 'Landmark', 'caixa 24h'], ['Ferramenta', 'Hammer', 'chave de fenda'],
+]
+
+function Hero() {
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const inputRef = useRef(null)
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (query.trim()) navigate(`/busca?q=${encodeURIComponent(query.trim())}`)
-  }
-
+  const [q, setQ] = useState('')
+  const a = agoraMV()
+  const ir = termo => navigate(`/busca?q=${encodeURIComponent(termo)}`)
   return (
-    <form onSubmit={handleSubmit} className="px-4 py-3">
-      <div className="relative">
-        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+    <section className="relative overflow-hidden px-4 pb-6 pt-2" style={{ background: 'linear-gradient(180deg, var(--verde) 0%, var(--verde-escuro) 100%)' }}>
+      <Serra />
+      <p className="sobe relative text-[13px] font-medium text-[#bfe3c9]" style={{ '--i': 0 }}>
+        {DIAS_NOME[DIAS[a.dia]]}, <span className="num">{hhmm(a.min).replace(/h$/, 'h00')}</span> em Monte Verde
+      </p>
+      <h1 className="sobe relative mt-1 text-[30px] font-extrabold leading-[1.05] text-white" style={{ '--i': 1 }}>
+        O que você precisa agora?
+      </h1>
+      <form
+        onSubmit={e => { e.preventDefault(); if (q.trim()) ir(q.trim()) }}
+        className="sobe relative mt-4 flex items-center gap-2 rounded-2xl bg-white p-1.5 pl-3.5 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.6)]"
+        style={{ '--i': 2 }} role="search"
+      >
+        <Search size={18} className="shrink-0 text-[#8a918b]" />
         <input
-          ref={inputRef}
-          type="search"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="O que você procura? Ex: pizza, hotel, táxi..."
-          className="w-full pl-10 pr-4 py-3 bg-white rounded-2xl text-sm shadow-sm border border-gray-100 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-900/20"
+          type="search" enterKeyHint="search" value={q} onChange={e => setQ(e.target.value)}
+          placeholder="farmácia aberta, pneu furado, jantar…"
+          aria-label="O que você precisa?"
+          className="min-w-0 flex-1 bg-transparent py-2.5 text-[15px] text-[#17241c] placeholder:text-[#8a918b]"
         />
-      </div>
-    </form>
-  )
-}
-
-function ActionGrid() {
-  const navigate = useNavigate()
-  return (
-    <section className="px-4 pb-4">
-      <h2 className="text-base font-bold text-gray-800 mb-3">O que você quer fazer hoje?</h2>
-      <div className="grid grid-cols-4 gap-2.5">
-        {HOME_ACTIONS.map(action => (
-          <button
-            key={action.slug}
-            onClick={() => navigate(`/categoria/${action.slug}`)}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-transform active:scale-95"
-            style={{ background: action.bg }}
-          >
-            <span className="text-2xl">{action.icon}</span>
-            <span className="text-[10px] font-semibold text-center leading-tight" style={{ color: action.color }}>
-              {action.label}
-            </span>
+        <button type="submit" className="botao bg-[var(--ouro)] text-[#2a2006]">Buscar</button>
+      </form>
+      <div className="sobe relative -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide" style={{ '--i': 3 }}>
+        {ATALHOS.map(([rot, ic, termo]) => (
+          <button key={rot} onClick={() => ir(termo)} className="chip bg-white/10 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]">
+            <Icon name={ic} size={15} />{rot}
           </button>
         ))}
       </div>
@@ -60,115 +60,122 @@ function ActionGrid() {
   )
 }
 
-function HorizontalSection({ title, seeAllPath, children, empty }) {
-  const navigate = useNavigate()
+/** Silhueta da Mantiqueira, desenhada (sem foto de banco). */
+function Serra() {
   return (
-    <section className="pb-4">
-      <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-base font-bold text-gray-800">{title}</h2>
-        {seeAllPath && (
-          <button
-            onClick={() => navigate(seeAllPath)}
-            className="flex items-center gap-0.5 text-xs font-medium text-green-800"
-          >
-            Ver todos <ChevronRight size={14} />
-          </button>
-        )}
+    <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-28 w-full" viewBox="0 0 480 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 78 L40 60 L78 70 L120 38 L150 52 L190 30 L232 50 L268 34 L300 46 L340 18 L378 40 L420 26 L452 42 L480 34 L480 120 L0 120Z" fill="#ffffff" opacity="0.05" />
+      <path d="M0 98 L50 82 L96 92 L140 72 L186 88 L230 76 L278 94 L330 74 L372 90 L420 80 L480 92 L480 120 L0 120Z" fill="#ffffff" opacity="0.06" />
+    </svg>
+  )
+}
+
+function Emergencia() {
+  const { businesses } = useBusinesses({ group: 'Emergência' })
+  const numeros = businesses.filter(b => b.subcategory === 'utilidade-publica').sort((a, b) => Number(a.phone) - Number(b.phone))
+  const ps = businesses.find(b => b.subcategory === 'pronto-socorro')
+  const farm = businesses.filter(b => b.subcategory === 'farmacias')
+  const farmAberta = farm.find(b => b.st.estado === 'aberto')
+  return (
+    <section className="bg-[var(--sos-fundo)] px-4 pb-5 pt-5" aria-labelledby="h-emerg">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 id="h-emerg" className="flex items-center gap-2 text-lg font-bold text-[var(--sos)]"><Siren size={20} />Emergência</h2>
+        <Link to="/sos" className="flex items-center text-[13px] font-semibold text-[var(--sos)]">Ver tudo <ChevronRight size={16} /></Link>
       </div>
-      {empty ? (
-        <p className="px-4 text-sm text-gray-400 italic">{empty}</p>
-      ) : (
-        <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
-          {children}
-        </div>
+      <div className="grid grid-cols-3 gap-2">
+        {numeros.map((b, i) => (
+          <a key={b.id} href={linkTel(b.phone)} onClick={() => registrar('tel', { businessId: b.id })}
+            className="cai pressiona flex flex-col items-center justify-center rounded-2xl bg-white py-3" style={{ '--i': i }}>
+            <span className="num text-[28px] font-extrabold leading-none text-[var(--sos)]">{b.phone}</span>
+            <span className="mt-1 text-xs font-medium text-[#17241c]">{b.name.split(' —')[0].replace(' Militar', '')}</span>
+          </a>
+        ))}
+      </div>
+      {ps && (
+        <a href={linkTel(ps.phone)} onClick={() => registrar('tel', { businessId: ps.id })} className="cai botao botao-sos mt-2 w-full justify-between px-4" style={{ '--i': 3, minHeight: 56 }}>
+          <span className="flex items-center gap-2.5"><Phone size={18} /><span className="text-left leading-tight">Pronto-socorro 24h<br /><span className="num text-xs font-medium opacity-85">{ps.phone}</span></span></span>
+          <ChevronRight size={18} />
+        </a>
+      )}
+      {(farmAberta || farm[0]) && (
+        <ul className="mt-2"><ContatoLinha b={farmAberta || farm[0]} index={4} /></ul>
+      )}
+      {farm.length > 0 && !farmAberta && (
+        <p className="mt-2 text-[13px] text-[#8a3b2e]">Nenhuma farmácia aberta agora pelo horário cadastrado. Em urgência, ligue para o pronto-socorro.</p>
       )}
     </section>
   )
 }
 
-function PromotionCard({ promo }) {
+function Faixa({ titulo, icone, verTodos, children }) {
   return (
-    <div className="flex-shrink-0 w-72 bg-white rounded-2xl overflow-hidden shadow-sm" style={{ scrollSnapAlign: 'start' }}>
-      <div className="relative">
-        {promo.image && (
-          <img src={promo.image} alt={promo.title} className="w-full h-32 object-cover" loading="lazy" />
-        )}
-        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-          <Flame size={11} /> {promo.discount}
-        </span>
+    <section className="pt-6">
+      <div className="mb-3 flex items-baseline justify-between px-4">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-[#17241c]">{icone && <Icon name={icone} size={19} className="text-[var(--verde)]" />}{titulo}</h2>
+        {verTodos && <Link to={verTodos} className="flex items-center text-[13px] font-semibold text-[var(--verde)]">Ver todos <ChevronRight size={16} /></Link>}
       </div>
-      <div className="p-3">
-        <p className="text-xs text-gray-400 font-medium">{promo.business_name}</p>
-        <h4 className="font-semibold text-sm text-gray-900 mt-0.5 line-clamp-1">{promo.title}</h4>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{promo.description}</p>
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-gray-400">
-            Válido até {new Date(promo.valid_until + 'T00:00:00').toLocaleDateString('pt-BR')}
-          </span>
-        </div>
-      </div>
-    </div>
+      {children}
+    </section>
   )
 }
 
 export function Home() {
-  const { businesses: featured, loading: loadingB } = useBusinesses({})
-  const { events, loading: loadingE } = useEvents({ filter: '30days' })
-
-  const featuredList = featured.filter(b => b.featured).slice(0, 6)
-  const upcomingEvents = events.slice(0, 4)
+  const navigate = useNavigate()
+  const { businesses: comer, loading } = useBusinesses({ category: 'alimentacao' })
+  const abertos = comer.filter(b => b.st.estado === 'aberto').slice(0, 8)
+  const { events } = useEvents({ filter: '30days' })
 
   return (
     <Layout>
-      <SearchBar />
+      <Hero />
+      <Emergencia />
 
-      <ActionGrid />
-
-      <HorizontalSection
-        title="Em Destaque"
-        seeAllPath="/categorias"
-        empty={!loadingB && featuredList.length === 0 ? 'Nenhum estabelecimento em destaque.' : null}
-      >
-        {loadingB ? (
-          Array(3).fill(0).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-64 h-52 bg-white rounded-2xl animate-pulse" style={{ scrollSnapAlign: 'start' }} />
-          ))
+      <Faixa titulo="Aberto agora para comer" icone="Utensils" verTodos="/categoria/alimentacao">
+        {loading ? (
+          <div className="flex gap-3 px-4">{[0, 1].map(i => <div key={i} className="esqueleto h-56 w-60 shrink-0 rounded-2xl" />)}</div>
+        ) : abertos.length ? (
+          <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
+            {abertos.map((b, i) => (
+              <div key={b.id} className="w-60 shrink-0" style={{ scrollSnapAlign: 'start' }}><BusinessCard business={b} index={i} /></div>
+            ))}
+          </div>
         ) : (
-          featuredList.map(b => (
-            <div key={b.id} className="flex-shrink-0 w-64" style={{ scrollSnapAlign: 'start' }}>
-              <BusinessCard business={b} />
-            </div>
-          ))
+          <p className="mx-4 rounded-2xl bg-white p-4 text-sm text-[#626a63]">Nenhum restaurante com horário cadastrado está aberto neste momento.</p>
         )}
-      </HorizontalSection>
+      </Faixa>
 
-      <HorizontalSection
-        title="Próximos Eventos"
-        seeAllPath="/eventos"
-        empty={!loadingE && upcomingEvents.length === 0 ? 'Nenhum evento próximo.' : null}
-      >
-        {loadingE ? (
-          Array(2).fill(0).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-64 h-52 bg-white rounded-2xl animate-pulse" style={{ scrollSnapAlign: 'start' }} />
-          ))
-        ) : (
-          upcomingEvents.map(ev => (
-            <div key={ev.id} className="flex-shrink-0 w-64" style={{ scrollSnapAlign: 'start' }}>
-              <EventCard event={ev} />
-            </div>
-          ))
-        )}
-      </HorizontalSection>
-
-      {MOCK_PROMOTIONS.length > 0 && (
-        <HorizontalSection title="🔥 Ofertas da Região" seeAllPath="/mais">
-          {MOCK_PROMOTIONS.map(p => (
-            <PromotionCard key={p.id} promo={p} />
+      <Faixa titulo="Para cada situação">
+        <div className="grid grid-cols-2 gap-2 px-4">
+          {SITUACOES.map((s, i) => (
+            <button key={s.id} onClick={() => navigate(`/busca?q=${s.id}`)} className="entra pressiona flex items-center gap-3 rounded-2xl bg-white p-3.5 text-left" style={{ '--i': i }}>
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e3efe6] text-[var(--verde)]"><Icon name={s.icone} size={18} /></span>
+              <span className="text-[14px] font-semibold text-[#17241c]">{s.rotulo}</span>
+            </button>
           ))}
-        </HorizontalSection>
+        </div>
+      </Faixa>
+
+      <Faixa titulo="Explore por categoria">
+        <div className="grid grid-cols-3 gap-2 px-4">
+          {CATEGORIES.map((c, i) => (
+            <button key={c.id} onClick={() => navigate(`/categoria/${c.slug}`)} className="entra pressiona flex flex-col items-start gap-2 rounded-2xl bg-white p-3" style={{ '--i': i }}>
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl text-white" style={{ background: c.tint }}><Icon name={c.icon} size={18} /></span>
+              <span className="text-[13px] font-semibold leading-tight text-[#17241c]">{c.name}</span>
+            </button>
+          ))}
+        </div>
+      </Faixa>
+
+      {events.length > 0 && (
+        <Faixa titulo="Próximos eventos" icone="Calendar" verTodos="/eventos">
+          <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
+            {events.slice(0, 4).map(ev => <div key={ev.id} className="w-64 shrink-0"><EventCard event={ev} /></div>)}
+          </div>
+        </Faixa>
       )}
 
-      <div className="h-4" />
+      <div className="pt-4"><Parceiros contexto="home" /></div>
+      <div className="h-2" />
     </Layout>
   )
 }

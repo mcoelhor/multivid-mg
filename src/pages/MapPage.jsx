@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Navigation2, MessageCircle } from 'lucide-react'
+import { X, MessageCircle } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
 import { useBusinesses } from '../hooks/useBusinesses'
-import { CATEGORIES } from '../data/categories'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { CATEGORIES, categoria, iconeDe, nomeSub } from '../data/categories'
+import { Icon } from '../components/UI/Icon'
+import { StatusPill } from '../components/UI/Badge'
+import { registrar, linkWhatsApp } from '../lib/track'
 
-let MapComponents = null
 
 function MapView({ businesses, onSelect }) {
   const [MapContainer, setMapContainer] = useState(null)
@@ -45,16 +48,15 @@ function MapView({ businesses, onSelect }) {
     )
   }
 
-  const createIcon = (cat) => {
-    const category = CATEGORIES.find(c => c.id === cat)
-    const bg = category?.color || '#14532d'
-    const icon = category?.icon || '📍'
+  const createIcon = (b) => {
+    const bg = categoria(b.category)?.tint || '#14532d'
+    const svg = renderToStaticMarkup(<Icon name={iconeDe(b)} size={16} strokeWidth={2.2} />)
     return L.divIcon({
-      html: `<div style="background:${bg};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:16px;line-height:1;">${icon}</span></div>`,
+      html: `<div class="pino" style="background:${bg}">${svg}</div>`,
       className: '',
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -38],
+      iconSize: [34, 34],
+      iconAnchor: [17, 34],
+      popupAnchor: [0, -36],
     })
   }
 
@@ -73,7 +75,7 @@ function MapView({ businesses, onSelect }) {
         <Marker
           key={b.id}
           position={[b.latitude, b.longitude]}
-          icon={createIcon(b.category)}
+          icon={createIcon(b)}
           eventHandlers={{ click: () => onSelect(b) }}
         />
       ) : null)}
@@ -85,11 +87,6 @@ function BottomSheet({ business, onClose }) {
   const navigate = useNavigate()
   if (!business) return null
 
-  function openWhatsApp() {
-    const msg = encodeURIComponent(`Olá! Vi o(a) ${business.name} no Multivid MG.`)
-    window.open(`https://wa.me/${business.whatsapp}?text=${msg}`, '_blank')
-  }
-
   return (
     <div className="absolute bottom-20 left-0 right-0 mx-4 bg-white rounded-2xl shadow-2xl p-4 z-[1000]">
       <div className="flex items-start gap-3">
@@ -97,12 +94,13 @@ function BottomSheet({ business, onClose }) {
           <img src={business.images[0]} alt={business.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
         ) : (
           <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-2xl shrink-0">
-            {CATEGORIES.find(c => c.id === business.category)?.icon || '🏪'}
+            <Icon name={iconeDe(business)} size={24} className="text-[#626a63]" />
           </div>
         )}
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-1">{business.name}</h3>
-          <p className="text-sm text-gray-500 mt-0.5">⭐ {business.rating?.toFixed(1)} · {business.city}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{nomeSub(business)}</p>
+          <StatusPill st={business.st} className="mt-1" />
           <div className="flex gap-2 mt-2">
             <button
               onClick={() => navigate(`/estabelecimento/${business.slug}`)}
@@ -112,12 +110,13 @@ function BottomSheet({ business, onClose }) {
               Ver detalhes
             </button>
             {business.whatsapp && (
-              <button
-                onClick={openWhatsApp}
+              <a
+                href={linkWhatsApp(business.whatsapp)} target="_blank" rel="noopener noreferrer"
+                onClick={() => registrar('whatsapp', { businessId: business.id })}
                 className="flex items-center gap-1 px-3 py-2 rounded-xl bg-green-500 text-white text-xs font-semibold"
               >
-                <MessageCircle size={13} /> WA
-              </button>
+                <MessageCircle size={13} /> WhatsApp
+              </a>
             )}
           </div>
         </div>
@@ -154,9 +153,9 @@ export function MapPage() {
               className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                 selectedCategory === cat.id ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'
               }`}
-              style={selectedCategory === cat.id ? { background: cat.color } : {}}
+              style={selectedCategory === cat.id ? { background: cat.tint } : {}}
             >
-              {cat.icon} {cat.name}
+              <Icon name={cat.icon} size={13} /> {cat.name}
             </button>
           ))}
         </div>
@@ -165,6 +164,11 @@ export function MapPage() {
           <MapView businesses={businesses} onSelect={setSelectedBusiness} />
         </div>
 
+        {!loading && (
+          <p className="absolute bottom-24 left-4 right-4 z-[998] rounded-xl bg-white/95 px-3 py-2 text-xs text-[#626a63] shadow">
+            {businesses.filter(b => b.latitude).length} de {businesses.length} lugares já têm localização no mapa. Os outros estão sendo marcados.
+          </p>
+        )}
         <BottomSheet business={selectedBusiness} onClose={() => setSelectedBusiness(null)} />
       </div>
     </Layout>

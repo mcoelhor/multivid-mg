@@ -1,66 +1,45 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
+import { Icon } from '../components/UI/Icon'
 import { CATEGORIES } from '../data/categories'
+import { useBusinesses } from '../hooks/useBusinesses'
 
 export function Categories() {
-  const navigate = useNavigate()
-  const [expanded, setExpanded] = useState(null)
+  const [aberta, setAberta] = useState(null)
+  const { businesses } = useBusinesses()
+  const conta = (cat, sub) => businesses.filter(b => b.category === cat && (!sub || b.subcategory === sub)).length
 
   return (
     <Layout title="Categorias" showSearch>
-      <div className="px-4 pt-4 pb-4">
-        <div className="space-y-3">
-          {CATEGORIES.map(cat => (
-            <div key={cat.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-              <button
-                className="w-full flex items-center gap-4 p-4"
-                onClick={() => setExpanded(expanded === cat.id ? null : cat.id)}
-              >
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-                  style={{ background: cat.bg }}
-                >
-                  {cat.icon}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-semibold text-gray-900">{cat.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{cat.description}</p>
-                </div>
-                <ChevronRight
-                  size={18}
-                  className="text-gray-400 transition-transform"
-                  style={{ transform: expanded === cat.id ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                />
+      <div className="space-y-2 px-4 pt-4">
+        {CATEGORIES.map((c, i) => {
+          const on = aberta === c.id
+          return (
+            <div key={c.id} className="entra overflow-hidden rounded-2xl bg-white" style={{ '--i': i }}>
+              <button className="pressiona flex w-full items-center gap-3.5 p-4 text-left" onClick={() => setAberta(on ? null : c.id)} aria-expanded={on}>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: c.tint }}><Icon name={c.icon} size={21} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold">{c.name} <span className="num text-xs font-medium text-[#8a918b]">{conta(c.id) || ''}</span></span>
+                  <span className="block truncate text-[13px] text-[#626a63]">{c.description}</span>
+                </span>
+                <ChevronDown size={18} className="text-[#8a918b] transition-transform duration-200" style={{ transform: on ? 'rotate(180deg)' : 'none' }} />
               </button>
-
-              {expanded === cat.id && (
-                <div className="border-t border-gray-50 px-4 pb-3">
-                  <button
-                    onClick={() => navigate(`/categoria/${cat.slug}`)}
-                    className="w-full flex items-center justify-between py-2.5 border-b border-gray-50"
-                  >
-                    <span className="text-sm font-semibold text-gray-800">Ver todos em {cat.name}</span>
-                    <ChevronRight size={14} className="text-gray-400" />
-                  </button>
-                  <div className="grid grid-cols-2 gap-0">
-                    {cat.subcategories.map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={() => navigate(`/categoria/${cat.slug}/${sub.slug}`)}
-                        className="flex items-center gap-2.5 py-2.5 pr-2"
-                      >
-                        <span className="text-base">{sub.icon}</span>
-                        <span className="text-sm text-gray-700">{sub.name}</span>
-                      </button>
-                    ))}
-                  </div>
+              <div className={`abre ${on ? 'aberto' : ''}`}><div>
+                <div className="border-t border-black/5 px-4 pb-2">
+                  <Link to={`/categoria/${c.slug}`} className="flex items-center justify-between py-3 text-sm font-semibold text-[var(--verde)]">Ver todos <ChevronRight size={16} /></Link>
+                  {c.subcategories.filter(s => conta(c.id, s.id)).map(s => (
+                    <Link key={s.id} to={`/categoria/${c.slug}/${s.slug}`} className="flex items-center gap-3 py-2.5 text-[14px]">
+                      <Icon name={s.icon} size={17} className="text-[#626a63]" /><span className="flex-1">{s.name}</span>
+                      <span className="num text-xs text-[#8a918b]">{conta(c.id, s.id)}</span>
+                    </Link>
+                  ))}
                 </div>
-              )}
+              </div></div>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </Layout>
   )

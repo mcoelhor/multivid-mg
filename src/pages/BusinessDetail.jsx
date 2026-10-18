@@ -1,299 +1,156 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import {
-  Phone, MessageCircle, Navigation2, Share2, Heart,
-  MapPin, Globe, Clock, ChevronLeft,
-} from 'lucide-react'
-
-function InstagramIcon({ size = 18, className = '' }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-    </svg>
-  )
-}
-import { useBusinessBySlug } from '../hooks/useBusinesses'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { Phone, MessageCircle, Navigation, Share2, Heart, MapPin, Globe, Clock, ChevronLeft, ChevronDown, Mail, Flag } from 'lucide-react'
+import { useBusinessBySlug, useBusinesses } from '../hooks/useBusinesses'
 import { useFavorites } from '../hooks/useFavorites'
-import { LoadingSpinner } from '../components/UI/LoadingSpinner'
-import { OpenBadge } from '../components/UI/Badge'
-import { StarRating } from '../components/UI/StarRating'
+import { Capa, BusinessCard } from '../components/UI/BusinessCard'
+import { StatusPill, ParceiroBadge } from '../components/UI/Badge'
+import { InstagramIcon } from '../components/UI/Icon'
 import { BottomNav } from '../components/Layout/BottomNav'
+import { Parceiros } from '../components/Parceiros'
+import { nomeSub } from '../data/categories'
+import { semanaLinhas } from '../lib/horario'
+import { registrar, linkTel, linkWhatsApp, linkRota, linkInstagram } from '../lib/track'
 
-const DAY_NAMES = {
-  monday: 'Segunda', tuesday: 'Terça', wednesday: 'Quarta',
-  thursday: 'Quinta', friday: 'Sexta', saturday: 'Sábado', sunday: 'Domingo',
-}
-const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-const TODAY_KEY = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
-
-function ImageCarousel({ images, name }) {
-  const [current, setCurrent] = useState(0)
-  if (!images?.length) {
-    return (
-      <div className="w-full h-72 bg-gradient-to-br from-green-900 to-emerald-600 flex items-center justify-center text-6xl">
-        🏪
-      </div>
-    )
-  }
+function Fotos({ b }) {
+  const [i, setI] = useState(0)
+  if (!b.images?.length) return <Capa b={b} alto="h-44" grande />
   return (
-    <div className="relative w-full h-72 overflow-hidden bg-gray-100">
-      <img src={images[current]} alt={name} className="w-full h-full object-cover" />
-      {images.length > 1 && (
-        <>
-          <button
-            onClick={() => setCurrent(c => Math.max(0, c - 1))}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
-            style={{ display: current === 0 ? 'none' : 'flex' }}
-          >‹</button>
-          <button
-            onClick={() => setCurrent(c => Math.min(images.length - 1, c + 1))}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
-            style={{ display: current === images.length - 1 ? 'none' : 'flex' }}
-          >›</button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {images.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`swiper-dot ${i === current ? 'active' : ''}`}
-              />
-            ))}
-          </div>
-        </>
+    <div className="relative h-64 overflow-hidden bg-[#ebe6db]">
+      <div className="flex h-full snap-x snap-mandatory overflow-x-auto scrollbar-hide" onScroll={e => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+        {b.images.map((src, k) => <img key={src} src={src} alt={k === 0 ? b.name : ''} className="h-full w-full shrink-0 snap-center object-cover" />)}
+      </div>
+      {b.images.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5">
+          {b.images.map((_, k) => <span key={k} className="h-1.5 rounded-full bg-white transition-all duration-200" style={{ width: k === i ? 16 : 6, opacity: k === i ? 1 : 0.6 }} />)}
+        </div>
       )}
     </div>
   )
 }
 
-function ActionButton({ icon: Icon, label, onClick, color = '#14532d', bg = '#F0FDF4', full = false }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all active:scale-95 ${full ? 'flex-1' : 'px-4'}`}
-      style={{ background: bg, color }}
-    >
-      <Icon size={18} strokeWidth={2} />
-      {label}
-    </button>
-  )
-}
-
-function openWhatsApp(whatsapp, name) {
-  const msg = encodeURIComponent(`Olá! Vi o(a) *${name}* no Multivid MG e gostaria de mais informações.`)
-  window.open(`https://wa.me/${whatsapp}?text=${msg}`, '_blank')
-}
-
-function openMaps(lat, lng, name) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  const url = isIOS
-    ? `maps://maps.apple.com/?q=${encodeURIComponent(name)}&ll=${lat},${lng}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${encodeURIComponent(name)}`
-  window.open(url, '_blank')
-}
-
-async function shareBusiness(name, slug) {
-  const url = `${window.location.origin}/estabelecimento/${slug}`
-  if (navigator.share) {
-    try { await navigator.share({ title: name, text: `Confira ${name} no Multivid MG`, url }) } catch {}
-  } else {
-    await navigator.clipboard.writeText(url)
-    alert('Link copiado!')
-  }
+async function compartilhar(b) {
+  const url = `${location.origin}/estabelecimento/${b.slug}`
+  try {
+    if (navigator.share) await navigator.share({ title: b.name, text: `${b.name} no Portal Monte Verde`, url })
+    else { await navigator.clipboard.writeText(url); alert('Link copiado.') }
+  } catch { /* cancelado */ }
 }
 
 export function BusinessDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { business, loading } = useBusinessBySlug(slug)
+  const { business: b, loading } = useBusinessBySlug(slug)
+  const { businesses: mesmos } = useBusinesses({ category: b?.category })
   const { isFavoriteBusiness, toggleBusiness } = useFavorites()
+  const [horarios, setHorarios] = useState(false)
+
+  useEffect(() => { if (b?.id) registrar('view', { businessId: b.id }) }, [b?.id])
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex flex-col">
-        <div className="h-72 bg-gray-200 animate-pulse" />
-        <div className="p-4 space-y-3">
-          <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-        </div>
+      <div className="min-h-dvh">
+        <div className="esqueleto h-56" />
+        <div className="space-y-3 p-5"><div className="esqueleto h-7 w-3/4 rounded-lg" /><div className="esqueleto h-4 w-1/2 rounded-lg" /><div className="esqueleto h-12 rounded-xl" /></div>
         <BottomNav />
       </div>
     )
   }
-
-  if (!business) {
+  if (!b) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-dvh gap-3">
-        <span className="text-5xl">😕</span>
-        <p className="text-gray-600 font-medium">Estabelecimento não encontrado</p>
-        <button onClick={() => navigate(-1)} className="text-green-800 text-sm font-semibold">Voltar</button>
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 px-8 text-center">
+        <p className="font-semibold">Não encontramos esse lugar.</p>
+        <button onClick={() => navigate('/')} className="botao botao-pri">Voltar ao início</button>
         <BottomNav />
       </div>
     )
   }
 
-  const isFav = isFavoriteBusiness(business.id)
+  const fav = isFavoriteBusiness(b.id)
+  const semana = semanaLinhas(b)
+  const local = [b.address, b.city, 'MG'].filter(Boolean).join(', ')
+  const outros = mesmos.filter(x => x.id !== b.id && x.subcategory === b.subcategory).slice(0, 4)
+  const acao = (kind) => () => registrar(kind, { businessId: b.id })
 
   return (
-    <div className="flex flex-col min-h-dvh pb-safe">
+    <div className="flex min-h-dvh flex-col pb-safe">
       <div className="relative">
-        <ImageCarousel images={business.images} name={business.name} />
-
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
-        >
-          <ChevronLeft size={22} />
-        </button>
-
-        <button
-          onClick={() => toggleBusiness(business.id)}
-          className="absolute top-4 right-4 w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center"
-        >
-          <Heart size={18} fill={isFav ? '#EF4444' : 'none'} stroke={isFav ? '#EF4444' : 'white'} />
-        </button>
+        <Fotos b={b} />
+        <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="pressiona absolute left-4 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }} aria-label="Voltar"><ChevronLeft size={22} /></button>
+        <div className="absolute right-4 flex gap-2" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }}>
+          <button onClick={() => compartilhar(b)} className="pressiona flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" aria-label="Compartilhar"><Share2 size={18} /></button>
+          <button onClick={() => toggleBusiness(b.id)} aria-pressed={fav} className="pressiona flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" aria-label="Favoritar"><Heart size={18} className={`coracao ${fav ? 'ativo' : ''}`} /></button>
+        </div>
       </div>
 
-      <div className="flex-1 bg-white rounded-t-3xl -mt-4 relative z-10 px-5 pt-5 pb-8 space-y-5">
-        <div>
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h1 className="text-xl font-bold text-gray-900 leading-tight">{business.name}</h1>
-            <OpenBadge isOpen={business.isOpen} />
+      <div className="relative z-10 -mt-4 flex-1 rounded-t-3xl bg-[var(--creme)] px-4 pt-5">
+        <div className="sobe" style={{ '--i': 0 }}>
+          <p className="text-[13px] font-semibold text-[var(--verde)]">{nomeSub(b)}</p>
+          <h1 className="mt-0.5 text-[24px] font-extrabold leading-tight">{b.name}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusPill st={b.st} longo />
+            {b.plan === 'premium' && <ParceiroBadge />}
           </div>
-          <StarRating rating={business.rating} count={business.review_count} size="md" />
-          {business.address && (
-            <p className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
-              <MapPin size={14} className="text-green-700 mt-0.5 shrink-0" />
-              {business.address}
-            </p>
-          )}
+          {b.description && <p className="mt-3 text-[15px] leading-relaxed text-[#3f4a43]">{b.description}</p>}
         </div>
 
-        <div className="flex gap-2">
-          {business.phone && (
-            <ActionButton
-              icon={Phone}
-              label="Ligar"
-              onClick={() => window.open(`tel:${business.phone}`, '_self')}
-              full
-              color="#1D4ED8"
-              bg="#EFF6FF"
-            />
-          )}
-          {business.whatsapp && (
-            <ActionButton
-              icon={MessageCircle}
-              label="WhatsApp"
-              onClick={() => openWhatsApp(business.whatsapp, business.name)}
-              full
-              color="#15803d"
-              bg="#F0FDF4"
-            />
-          )}
+        {/* Ações principais: grandes e no topo, porque quem abre aqui geralmente tem pressa */}
+        <div className="sobe mt-4 grid grid-cols-2 gap-2" style={{ '--i': 1 }}>
+          {b.phone && <a href={linkTel(b.phone)} onClick={acao('tel')} className="botao botao-pri" style={{ minHeight: 52 }}><Phone size={18} />Ligar</a>}
+          {b.whatsapp && <a href={linkWhatsApp(b.whatsapp)} target="_blank" rel="noopener noreferrer" onClick={acao('whatsapp')} className="botao botao-wa" style={{ minHeight: 52 }}><MessageCircle size={18} />WhatsApp</a>}
+          {(b.address || b.latitude) && <a href={linkRota(b)} target="_blank" rel="noopener noreferrer" onClick={acao('rota')} className={`botao botao-claro ${b.phone && b.whatsapp ? 'col-span-2' : ''}`} style={{ minHeight: 52 }}><Navigation size={18} />Como chegar</a>}
         </div>
 
-        <div className="flex gap-2">
-          {business.latitude && (
-            <ActionButton
-              icon={Navigation2}
-              label="Como chegar"
-              onClick={() => openMaps(business.latitude, business.longitude, business.name)}
-              full
-              color="#B45309"
-              bg="#FFFBEB"
-            />
+        <dl className="sobe mt-4 divide-y divide-black/5 rounded-2xl bg-white" style={{ '--i': 2 }}>
+          {b.address && (
+            <div className="flex gap-3 p-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><div><dt className="sr-only">Endereço</dt><dd className="text-[15px]">{local}</dd></div></div>
           )}
-          <ActionButton
-            icon={Share2}
-            label="Compartilhar"
-            onClick={() => shareBusiness(business.name, business.slug)}
-            full
-            color="#6B7280"
-            bg="#F9FAFB"
-          />
-        </div>
-
-        {business.description && (
-          <div>
-            <h2 className="text-sm font-bold text-gray-800 mb-2">Sobre</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">{business.description}</p>
+          {(b.phone || b.phone2) && (
+            <div className="flex gap-3 p-4"><Phone size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><dd className="num text-[15px]">
+              {b.phone && <a href={linkTel(b.phone)} onClick={acao('tel')} className="underline decoration-black/20 underline-offset-4">{b.phone}</a>}
+              {b.phone2 && <> · <a href={linkTel(b.phone2)} onClick={acao('tel')} className="underline decoration-black/20 underline-offset-4">{b.phone2}</a></>}
+            </dd></div>
+          )}
+          <div className="p-4">
+            <button onClick={() => setHorarios(v => !v)} aria-expanded={horarios} disabled={!semana.length} className="flex w-full items-center gap-3 text-left">
+              <Clock size={18} className="shrink-0 text-[var(--verde)]" />
+              <span className="flex-1 text-[15px]">{semana.length ? 'Horários da semana' : 'Horário não informado'}</span>
+              {semana.length > 0 && <ChevronDown size={18} className="text-[#8a918b] transition-transform duration-200" style={{ transform: horarios ? 'rotate(180deg)' : 'none' }} />}
+            </button>
+            <div className={`abre ${horarios ? 'aberto' : ''}`}><div>
+              <ul className="ml-[30px] mt-2 space-y-1">
+                {semana.map(l => (
+                  <li key={l.dias} className={`flex justify-between text-sm ${l.hoje ? 'font-semibold text-[var(--verde)]' : 'text-[#3f4a43]'}`}>
+                    <span>{l.dias}{l.hoje ? ' (hoje)' : ''}</span><span className="num">{l.texto}</span>
+                  </li>
+                ))}
+              </ul>
+            </div></div>
+            {b.open_24h?.startsWith('plant') && <p className="ml-[30px] mt-2 text-[13px] text-[#7a5a08]">Atende plantão 24h por telefone.</p>}
           </div>
-        )}
+          {b.instagram && (
+            <a href={linkInstagram(b.instagram)} target="_blank" rel="noopener noreferrer" onClick={acao('instagram')} className="flex items-center gap-3 p-4"><InstagramIcon size={18} className="text-[var(--verde)]" /><span className="text-[15px]">@{b.instagram.replace(/^@|.*instagram\.com\//g, '').replace(/\/$/, '')}</span></a>
+          )}
+          {b.website && (
+            <a href={b.website} target="_blank" rel="noopener noreferrer" onClick={acao('site')} className="flex items-center gap-3 p-4"><Globe size={18} className="text-[var(--verde)]" /><span className="truncate text-[15px]">{b.website.replace(/^https?:\/\/(www\.)?/, '')}</span></a>
+          )}
+          {b.email && (
+            <a href={`mailto:${b.email}`} className="flex items-center gap-3 p-4"><Mail size={18} className="text-[var(--verde)]" /><span className="truncate text-[15px]">{b.email}</span></a>
+          )}
+        </dl>
 
-        {business.hours && (
-          <div>
-            <h2 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-              <Clock size={15} className="text-green-700" /> Horário de Funcionamento
-            </h2>
-            <div className="bg-gray-50 rounded-2xl overflow-hidden">
-              {DAY_ORDER.map(day => {
-                const h = business.hours[day]
-                const isToday = day === TODAY_KEY
-                return (
-                  <div
-                    key={day}
-                    className={`flex items-center justify-between px-4 py-2.5 text-sm border-b border-gray-100 last:border-0 ${isToday ? 'bg-green-50' : ''}`}
-                  >
-                    <span className={`font-medium ${isToday ? 'text-green-800' : 'text-gray-700'}`}>
-                      {DAY_NAMES[day]} {isToday && '(hoje)'}
-                    </span>
-                    {h?.closed ? (
-                      <span className="text-red-500 text-xs font-medium">Fechado</span>
-                    ) : h?.open === '00:00' && h?.close === '23:59' ? (
-                      <span className="text-green-600 text-xs font-medium">24 horas</span>
-                    ) : (
-                      <span className={`${isToday ? 'text-green-700 font-semibold' : 'text-gray-500'}`}>
-                        {h?.open} – {h?.close}
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {(business.instagram || business.website) && (
-          <div>
-            <h2 className="text-sm font-bold text-gray-800 mb-2">Links</h2>
-            <div className="flex flex-col gap-2">
-              {business.instagram && (
-                <a
-                  href={`https://instagram.com/${business.instagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl"
-                >
-                  <InstagramIcon size={18} className="text-pink-600" />
-                  <span className="text-sm font-medium text-pink-700">@{business.instagram}</span>
-                </a>
-              )}
-              {business.website && (
-                <a
-                  href={business.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl"
-                >
-                  <Globe size={18} className="text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700 truncate">{business.website.replace(/^https?:\/\//, '')}</span>
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        {business.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {business.tags.map(tag => (
-              <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <Link to="/mais#corrigir" className="mt-3 flex items-center gap-2 px-1 text-[13px] text-[#626a63]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
       </div>
 
+      {(b.category === 'construcao' || b.category === 'imobiliarias') && <Parceiros contexto={b.category} />}
+
+      {outros.length > 0 && (
+        <section className="px-4 pt-6">
+          <h2 className="mb-3 text-lg font-bold">Outros por perto</h2>
+          <div className="space-y-3">{outros.map((x, i) => <BusinessCard key={x.id} business={x} index={i} compacto />)}</div>
+        </section>
+      )}
+      <div className="h-6" />
       <BottomNav />
     </div>
   )
