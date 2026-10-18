@@ -11,6 +11,11 @@ import { useEvents } from '../hooks/useEvents'
 import { CATEGORIES } from '../data/categories'
 import { FOTOS, FOTO_CATEGORIA } from '../data/fotos'
 import { agoraMV, DIAS_NOME, DIAS, hhmm } from '../lib/horario'
+import { useClima } from '../hooks/useClima'
+import { useOfertas } from '../hooks/useOfertas'
+import { Avisos } from '../components/Avisos'
+import { BotaoVoz } from '../components/BotaoVoz'
+import { CartaoOferta } from '../components/Oferta'
 
 const POSTER = [FOTOS.marDeNuvens, FOTOS.porDoSol, FOTOS.enxaimel, FOTOS.serra, FOTOS.ruaAraucaria]
 const SO_AQUI = [
@@ -64,7 +69,8 @@ function Poster() {
 }
 
 // Chips de intenção mudam com a hora: de manhã café, à noite fondue e pizza.
-function chipsDaHora(min) {
+function chipsDaHora(min, chuva = false) {
+  if (chuva) return [['Dia de chuva', 'chuva'], ['Café e chocolate', 'chocolate quente'], ['Fondue', 'fondue'], ['Lojinhas', 'lembranca']]
   if (min < 660) return [['Café da manhã', 'cafe da manha'], ['Trilha', 'trilha'], ['Mar de nuvens', 'mirante'], ['Farmácia', 'farmacia']]
   if (min < 900) return [['Almoço', 'almoco'], ['Comida mineira', 'mineira'], ['Aventura', 'aventura'], ['Com crianças', 'criancas']]
   if (min < 1080) return [['Café e chocolate', 'chocolate quente'], ['Lojinhas', 'lembranca'], ['Aventura', 'aventura'], ['Dia de chuva', 'chuva']]
@@ -76,8 +82,10 @@ function Agora() {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const a = agoraMV()
+  const clima = useClima()
   const { businesses } = useBusinesses({})
   const abertos = businesses.filter(b => b.st.estado === 'aberto' || b.st.estado === 'plantao')
+  const frio = clima && clima.minNoite != null && clima.minNoite <= 10 && a.min >= 840
   const n = cat => abertos.filter(b => b.category === cat).length
   const ACOES = [
     ['Comer agora', `${n('alimentacao')} abertos`, '/categoria/alimentacao?aberto=1', 'Utensils'],
@@ -88,14 +96,28 @@ function Agora() {
 
   return (
     <section className="bg-[var(--araucaria)] px-5 pb-8 pt-6 text-white" aria-labelledby="h-agora">
-      <p className="sobe text-[15px] text-white/75" style={{ '--i': 2 }}>
-        {saudacao(a.min)}. {DIAS_NOME[DIAS[a.dia]]}, <span className="num">{hhmm(a.min)}</span> em Monte Verde.
+      <p className="sobe flex flex-wrap items-center gap-x-1.5 text-[15px] text-white/75" style={{ '--i': 2 }}>
+        <span>{saudacao(a.min)}. {DIAS_NOME[DIAS[a.dia]]}, <span className="num">{hhmm(a.min)}</span> em Monte Verde.</span>
+        {clima && <span className="inline-flex items-center gap-1 text-white"><Icon name={clima.icone} size={16} className="text-[var(--broto)]" /><span><span className="num">{clima.temp} °C</span>, {clima.texto}</span></span>}
       </p>
       <h2 id="h-agora" className="sobe mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.03em]" style={{ '--i': 2 }}>
         {abertos.length ? <><span className="num">{abertos.length}</span> lugares abertos agora</> : 'O que você precisa agora?'}
       </h2>
 
-      <div className="sobe mt-5 grid grid-cols-2 gap-2.5" style={{ '--i': 3 }}>
+      {clima && (clima.chuvaProx || clima.chuvaHoje || frio) && (
+        <Link to={clima.chuvaProx || clima.chuvaHoje ? '/busca?q=chuva' : '/busca?q=fondue'} className="sobe pressiona mt-4 flex items-center gap-3 rounded-[var(--raio)] bg-[var(--ceu)] p-4 text-[var(--araucaria)]" style={{ '--i': 3 }}>
+          <Icon name={clima.chuvaProx || clima.chuvaHoje ? 'CloudRain' : 'Snowflake'} size={24} className="shrink-0 text-[var(--musgo)]" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[17px] font-extrabold leading-tight tracking-[-0.02em]">
+              {clima.chuvaProx ? 'Chuva nas próximas horas' : clima.chuvaHoje ? 'Chove hoje' : `Esfria à noite: ${clima.minNoite} °C`}
+            </span>
+            <span className="block text-[14px] text-[var(--leve)]">{clima.chuvaProx || clima.chuvaHoje ? 'Plano B: chocolaterias, cervejarias, galerias e outros lugares cobertos' : 'Leve casaco. Fondue, lareira e vinho são a pedida'}</span>
+          </span>
+          <ArrowRight size={18} className="shrink-0 text-[var(--musgo)]" />
+        </Link>
+      )}
+
+      <div className="sobe mt-4 grid grid-cols-2 gap-2.5" style={{ '--i': 3 }}>
         {ACOES.map(([t, sub, to, ic]) => (
           <Link key={to} to={to} className="pressiona flex min-h-[92px] flex-col justify-between rounded-[var(--raio)] bg-white/10 p-4">
             <Icon name={ic} size={22} className="text-[var(--broto)]" />
@@ -109,9 +131,10 @@ function Agora() {
         <Search size={18} className="shrink-0 text-[var(--leve)]" />
         <input type="search" enterKeyHint="search" value={q} onChange={e => setQ(e.target.value)} aria-label="O que você procura?"
           placeholder="fondue, farmácia, trilha…" className="min-w-0 flex-1 bg-transparent text-[16px] placeholder:text-[var(--leve)]" />
+        <BotaoVoz onTexto={t => navigate(`/busca?q=${encodeURIComponent(t)}`)} />
       </form>
       <div className="sobe -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-hide" style={{ '--i': 4 }}>
-        {chipsDaHora(a.min).map(([t, termo]) => (
+        {chipsDaHora(a.min, clima?.chuvaHoje).map(([t, termo]) => (
           <Link key={termo} to={`/busca?q=${encodeURIComponent(termo)}`} className="chip bg-white/10 text-white">{t}</Link>
         ))}
       </div>
@@ -119,6 +142,28 @@ function Agora() {
       <Link to="/roteiro" className="sobe botao botao-broto mt-5 h-14 w-full justify-between px-6 text-[17px]" style={{ '--i': 5 }}>
         <span className="flex items-center gap-2.5"><Route size={20} />Montar meu roteiro</span><ArrowRight size={20} />
       </Link>
+    </section>
+  )
+}
+
+/** Ofertas dos lugares verificados, quando existem. */
+function Ofertas() {
+  const { ofertas } = useOfertas()
+  const { businesses } = useBusinesses({})
+  if (!ofertas.length) return null
+  const porId = new Map(businesses.map(b => [b.id, b]))
+  const lista = ofertas.filter(o => porId.has(o.business_id)).slice(0, 4)
+  if (!lista.length) return null
+  return (
+    <section className="mt-16 px-5" aria-labelledby="h-ofertas">
+      <div className="flex items-end justify-between">
+        <h2 id="h-ofertas" className="titulo revela">Ofertas da semana</h2>
+        <Link to="/ofertas" className="text-[15px] font-bold text-[var(--musgo)]">Todas</Link>
+      </div>
+      <p className="revela mt-2 text-[15px] text-[var(--leve)]">Dos próprios estabelecimentos. Mostre a tela e pronto.</p>
+      <div className="mt-5 space-y-3">
+        {lista.map((o, k) => <div key={o.id} className="revela" style={{ '--i': k }}><CartaoOferta oferta={o} lugar={porId.get(o.business_id)} mostrarLugar compacto /></div>)}
+      </div>
     </section>
   )
 }
@@ -260,9 +305,11 @@ export function Home() {
   const { events } = useEvents({ filter: '30days' })
   return (
     <Layout hideHeader titulo="">
+      <Avisos />
       <Poster />
       <Agora />
       <Momentos />
+      <Ofertas />
       <Explorar />
       <ConviteRoteiro />
       <Historia />

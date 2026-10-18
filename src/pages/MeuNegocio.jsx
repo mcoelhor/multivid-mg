@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Store, LogOut, Loader2, Check, Camera, Trash2, Eye, Phone, MessageCircle, Navigation, KeyRound } from 'lucide-react'
+import { Store, LogOut, Loader2, Check, Camera, Trash2, Eye, Phone, MessageCircle, Navigation, KeyRound, Ticket, Plus } from 'lucide-react'
+import { carregarOfertas } from '../hooks/useOfertas'
 import { Layout } from '../components/Layout/Layout'
 import { StatusPill } from '../components/UI/Badge'
 import { supabase } from '../lib/supabase'
@@ -106,6 +107,60 @@ function Fotos({ b, fotos, setFotos }) {
   )
 }
 
+/** Ofertas do dono: até 3 ativas, "mostre esta tela", com contagem de usos. */
+function OfertasDono({ b }) {
+  const [lista, setLista] = useState(null)
+  const [f, setF] = useState({ titulo: '', regras: '', fim: '' })
+  const [msg, setMsg] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const set = k => e => setF(v => ({ ...v, [k]: e.target.value }))
+  const carregar = () => supabase.from('ofertas').select('*').eq('business_id', b.id).order('criado_em', { ascending: false }).then(({ data }) => setLista(data || []))
+  useEffect(() => { carregar() }, [b.id])
+  async function criar(e) {
+    e.preventDefault(); setMsg('')
+    if (f.titulo.trim().length < 4) { setMsg('Escreva a oferta, por exemplo: "Café grátis com o almoço".'); return }
+    setEnviando(true)
+    const { error } = await supabase.from('ofertas').insert({ business_id: b.id, titulo: f.titulo.trim().slice(0, 80), regras: f.regras.trim().slice(0, 200) || null, fim: f.fim ? new Date(f.fim + 'T23:59:59').toISOString() : null })
+    setEnviando(false)
+    if (error) { setMsg(error.message.includes('Máximo') ? 'Você já tem 3 ofertas ativas. Desative uma para criar outra.' : 'Não foi possível criar.'); return }
+    setF({ titulo: '', regras: '', fim: '' }); carregar(); carregarOfertas(true)
+  }
+  async function alternar(o) { await supabase.from('ofertas').update({ ativo: !o.ativo }).eq('id', o.id); carregar(); carregarOfertas(true) }
+  async function apagar(o) { if (confirm('Apagar esta oferta?')) { await supabase.from('ofertas').delete().eq('id', o.id); carregar(); carregarOfertas(true) } }
+  const ativas = (lista || []).filter(o => o.ativo && (!o.fim || new Date(o.fim) > new Date()))
+  return (
+    <section className="mt-8 rounded-[var(--raio)] bg-[var(--papel)] p-5">
+      <h3 className="flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.02em]"><Ticket size={19} className="text-[var(--musgo)]" />Ofertas para quem vem pelo guia</h3>
+      <p className="mt-1 text-[14px] leading-relaxed text-[var(--leve)]">O turista toca em "Usar oferta", mostra a tela no balcão e você vê quantas vezes ela foi usada. Até 3 ativas. Exemplos: "Café grátis com o almoço", "10% no fondue de terça a quinta", "Sobremesa por conta da casa".</p>
+      {lista === null ? <div className="esqueleto mt-3 h-16 rounded-2xl" /> : lista.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {lista.map(o => (
+            <li key={o.id} className={`rounded-2xl bg-[var(--nevoa)] p-3.5 ${o.ativo ? '' : 'opacity-60'}`}>
+              <p className="text-[16px] font-bold leading-tight">{o.titulo}</p>
+              <p className="mt-1 text-[13px] text-[var(--leve)]">{o.regras ? o.regras + ' · ' : ''}{o.fim ? `até ${new Date(o.fim).toLocaleDateString('pt-BR')}` : 'sem prazo'} · <b className="num text-[var(--araucaria)]">{o.usos}</b> {o.usos === 1 ? 'uso' : 'usos'}{!o.ativo ? ' · desativada' : o.fim && new Date(o.fim) < new Date() ? ' · encerrada' : ''}</p>
+              <div className="mt-2 flex gap-2">
+                <button onClick={() => alternar(o)} className="botao botao-sec h-9 min-h-0 flex-1 text-[14px]">{o.ativo ? 'Desativar' : 'Ativar'}</button>
+                <button onClick={() => apagar(o)} className="botao botao-sec h-9 min-h-0 w-10 px-0" aria-label="Apagar"><Trash2 size={15} /></button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {ativas.length < 3 && (
+        <form onSubmit={criar} className="mt-4">
+          <label className="block text-[15px] font-bold" htmlFor="ot">Nova oferta</label>
+          <input id="ot" value={f.titulo} onChange={set('titulo')} maxLength={80} placeholder="Ex.: Café grátis com o almoço" className={campo} />
+          <input value={f.regras} onChange={set('regras')} maxLength={200} placeholder="Condições (opcional): de terça a quinta, uma por mesa…" className={campo} />
+          <label className="mt-3 block text-[15px] font-bold" htmlFor="of">Vale até <span className="font-medium text-[var(--leve)]">(opcional)</span></label>
+          <input id="of" type="date" value={f.fim} onChange={set('fim')} className={campo} />
+          {msg && <p className="mt-2 text-[14px] font-semibold text-[var(--sos)]">{msg}</p>}
+          <button disabled={enviando} className="botao botao-pri mt-3 h-12 w-full"><Plus size={17} />Publicar oferta</button>
+        </form>
+      )}
+    </section>
+  )
+}
+
 function Editor({ negocio, onSalvo }) {
   const [b, setB] = useState({ ...negocio, hours: { ...(negocio.hours || {}) } })
   const [fotos, setFotos] = useState([])
@@ -137,7 +192,7 @@ function Editor({ negocio, onSalvo }) {
         <p className="text-[14px] text-white/70">{nomeSub(b)}</p>
         <h2 className="text-[24px] font-extrabold leading-tight tracking-[-0.03em]">{b.name}</h2>
         <div className="mt-4 grid grid-cols-4 gap-2 text-center">
-          {[['view', 'visitas', Eye], ['whatsapp', 'WhatsApp', MessageCircle], ['tel', 'ligações', Phone], ['rota', 'rotas', Navigation]].map(([k, r, I]) => (
+          {[['view', 'visitas', Eye], ['whatsapp', 'WhatsApp', MessageCircle], ['tel', 'ligações', Phone], ['cupom', 'ofertas', Ticket]].map(([k, r, I]) => (
             <div key={k} className="rounded-2xl bg-white/10 py-3"><I size={16} className="mx-auto text-[var(--broto)]" /><p className="num mt-1 text-[22px] font-extrabold leading-none">{rel ? n(k) : '–'}</p><p className="mt-1 text-[12px] text-white/70">{r}</p></div>
           ))}
         </div>
@@ -171,6 +226,7 @@ function Editor({ negocio, onSalvo }) {
       </section>
 
       <Fotos b={b} fotos={fotos} setFotos={setFotos} />
+      <OfertasDono b={b} />
 
       <button onClick={salvar} disabled={estado === 'salvando'} className="botao botao-pri mt-8 h-14 w-full text-[17px]">
         {estado === 'salvando' ? <Loader2 size={18} className="animate-spin" /> : estado === 'ok' ? <><Check size={18} />Salvo</> : 'Salvar alterações'}
