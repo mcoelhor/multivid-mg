@@ -68,9 +68,10 @@ export function AdminDashboard() {
       supabase.rpc('buscas', { dias, so_vazias: true }),
       supabase.rpc('origens', { dias }),
       contar('visita', dias),
-    ]).then(([view, wa, tel, rota, busca, parc, leads, lugares, rk, bv, og, visitas]) => {
+      contar('cupom', dias),
+    ]).then(([view, wa, tel, rota, busca, parc, leads, lugares, rk, bv, og, visitas, cupons]) => {
       if (!vivo) return
-      setK({ view, wa, tel, rota, busca, parc, visitas, leads: leads.count || 0, lugares: lugares.count || 0 })
+      setK({ view, wa, tel, rota, busca, parc, visitas, cupons, leads: leads.count || 0, lugares: lugares.count || 0 })
       setRank(rk.data || [])
       setVazias((bv.data || []).slice(0, 8))
       setOrigens(og.data || [])
@@ -92,6 +93,7 @@ export function AdminDashboard() {
         <Kpi rotulo="Buscas" valor={k.busca} onClick={() => navigate('/admin/buscas')} />
         <Kpi rotulo="WhatsApp" valor={k.wa} />
         <Kpi rotulo="Ligações" valor={k.tel} />
+        <Kpi rotulo="Ofertas usadas" valor={k.cupons} sub="mostradas no balcão" />
         <Kpi rotulo="Cliques nos parceiros" valor={k.parc} sub="Toca + Construtora" />
         <Kpi rotulo="Lugares ativos" valor={k.lugares} onClick={() => navigate('/admin/empresas')} />
       </div>

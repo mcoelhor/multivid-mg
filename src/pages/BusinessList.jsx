@@ -11,6 +11,7 @@ import { CATEGORIES } from '../data/categories'
 import { FOTO_CATEGORIA } from '../data/fotos'
 import { SITUACOES, ehObra, ehUrgente, situacaoDoTermo, subsDoTermo } from '../lib/busca'
 import { registrar } from '../lib/track'
+import { BotaoVoz } from '../components/BotaoVoz'
 
 const URGENTES = ['farmacias', 'pronto-socorro', 'hospitais', 'dentistas', 'clinicas', 'oficinas', 'borracharias', 'postos', 'taxis', 'veterinarios', 'utilidade-publica']
 const SUGESTOES = ['fondue', 'café colonial', 'trilha', 'pizza', 'chocolate', 'cervejaria', 'farmácia', 'aventura']
@@ -72,10 +73,12 @@ export function BusinessList() {
             <input name="q" type="search" enterKeyHint="search" defaultValue={q} key={q} autoFocus={!q}
               placeholder="O que você procura?" aria-label="Buscar"
               className="h-14 w-full rounded-full bg-[var(--papel)] pl-12 pr-14 text-[16px]" />
-            {q && (
+            {q ? (
               <Link to="/busca" replace className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full" aria-label="Limpar busca">
                 <X size={18} className="text-[var(--leve)]" />
               </Link>
+            ) : (
+              <BotaoVoz onTexto={t => navigate(`/busca?q=${encodeURIComponent(t)}`)} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
             )}
           </div>
         </form>

@@ -1,1 +1,15 @@
-{ "rewrites": [{ "source": "/((?!.*\\.).*)", "destination": "/index.html" }] }
+{
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/seo?tipo=sitemap" },
+    { "source": "/robots.txt", "destination": "/api/seo?tipo=robots" },
+    {
+      "source": "/:path((?!api/|assets/)(?!.*\\.).*)?",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(WhatsApp|whatsapp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Googlebot|Google-InspectionTool|bingbot|DuckDuckBot|Applebot|YandexBot|Pinterestbot|Embedly|Iframely|SkypeUriPreview|redditbot).*" }],
+      "destination": "/api/og?path=/:path"
+    },
+    { "source": "/((?!api/)(?!.*\\.).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+  ]
+}

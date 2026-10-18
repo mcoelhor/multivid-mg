@@ -10,6 +10,8 @@ import { BottomNav } from '../components/Layout/BottomNav'
 import { Rodape } from '../components/Layout/Rodape'
 import { useTitulo } from '../components/Layout/Layout'
 import { Parceiros } from '../components/Parceiros'
+import { CartaoOferta } from '../components/Oferta'
+import { useOfertas } from '../hooks/useOfertas'
 import { nomeSub } from '../data/categories'
 import { semanaLinhas } from '../lib/horario'
 import { registrar, linkTel, linkWhatsApp, linkRota, linkInstagram } from '../lib/track'
@@ -32,10 +34,12 @@ function Fotos({ b }) {
 }
 
 async function compartilhar(b) {
-  const url = `${location.origin}/estabelecimento/${b.slug}`
+  const url = `${location.origin}/estabelecimento/${b.slug}?utm_source=compartilhado&utm_medium=whatsapp`
+  const texto = `${b.name}${b.st?.estado === 'aberto' ? ' (aberto agora)' : ''} · Monte Verde MG`
   try {
-    if (navigator.share) await navigator.share({ title: b.name, text: `${b.name} no Portal Monte Verde`, url })
+    if (navigator.share) await navigator.share({ title: b.name, text: texto, url })
     else { await navigator.clipboard.writeText(url); alert('Link copiado.') }
+    registrar('compartilhar', { businessId: b.id })
   } catch { /* cancelado */ }
 }
 
@@ -46,6 +50,8 @@ export function BusinessDetail() {
   const { businesses: mesmos } = useBusinesses({ category: b?.category })
   const { isFavoriteBusiness, toggleBusiness } = useFavorites()
   const [horarios, setHorarios] = useState(false)
+  const { porLugar } = useOfertas()
+  const ofertas = b ? porLugar.get(b.id) || [] : []
   useTitulo(b ? `${b.name} · ${nomeSub(b)}` : 'Monte Verde MG')
 
   useEffect(() => { if (b?.id) registrar('view', { businessId: b.id }) }, [b?.id])
@@ -97,6 +103,12 @@ export function BusinessDetail() {
           </div>
           {b.description && <p className="mt-3 text-[17px] leading-relaxed">{b.description}</p>}
         </div>
+
+        {ofertas.length > 0 && (
+          <div className="sobe mt-4 space-y-3" style={{ '--i': 1 }}>
+            {ofertas.map(o => <CartaoOferta key={o.id} oferta={o} lugar={b} />)}
+          </div>
+        )}
 
         {/* Ações principais: grandes e no topo, porque quem abre aqui geralmente tem pressa */}
         <div className="sobe mt-4 grid grid-cols-2 gap-2" style={{ '--i': 1 }}>

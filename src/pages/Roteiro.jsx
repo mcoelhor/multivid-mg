@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Shuffle, Trash2, Navigation, Share2, Plus, RefreshCcw, X, Check, ChevronUp, ChevronDown, Pencil } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
 import { Selo } from '../components/UI/BusinessCard'
@@ -174,7 +174,14 @@ function FolhaAdicionar({ aberta, onFechar, cands, dia, perfil, usados, onEscolh
 
 export function Roteiro() {
   const { businesses, loading } = useBusinesses({})
-  const salvo = useMemo(ler, [])
+  const [params] = useSearchParams()
+  // Roteiro recebido por link: ?r=<json em base64>
+  const recebido = useMemo(() => {
+    const r = params.get('r')
+    if (!r) return null
+    try { const d = JSON.parse(decodeURIComponent(escape(atob(r.replace(/-/g, '+').replace(/_/g, '/'))))); return d.perfil && Array.isArray(d.roteiro) ? d : null } catch { return null }
+  }, [params])
+  const salvo = useMemo(() => recebido || ler(), [recebido])
   const [perfil, setPerfil] = useState(salvo?.perfil || { dias: 2, inicio: inicioPadrao(), comQuem: 'casal', gostos: ['comida'], ritmo: 'calmo', semente: 7 })
   const [compacto, setCompacto] = useState(salvo?.roteiro || null)
   const [diaAtivo, setDiaAtivo] = useState(0)
@@ -221,10 +228,13 @@ export function Roteiro() {
   const d = roteiro[diaAtivo] || roteiro[0]
   const nomes = roteiro.map((x, k) => nomeDia(x.dia, k, perfil.inicio))
   const compartilhar = async () => {
-    const texto = textoCompartilhar(roteiro, nomes)
+    const codigo = btoa(unescape(encodeURIComponent(JSON.stringify({ perfil, roteiro: compacto })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    const url = `${location.origin}/roteiro?r=${codigo}&utm_source=compartilhado&utm_medium=whatsapp`
+    const texto = textoCompartilhar(roteiro, nomes).replace('Montado em monteverdemg.com.br/roteiro', 'Abra e edite o roteiro aqui:')
     try {
-      if (navigator.share) await navigator.share({ title: 'Meu roteiro em Monte Verde', text: texto })
-      else { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000) }
+      if (navigator.share) await navigator.share({ title: 'Meu roteiro em Monte Verde', text: texto, url })
+      else { await navigator.clipboard.writeText(`${texto}\n${url}`); setCopiado(true); setTimeout(() => setCopiado(false), 2000) }
+      registrar('compartilhar', { term: 'roteiro' })
     } catch { /* cancelado */ }
   }
 

@@ -6,6 +6,7 @@ import { useFavorites } from '../../hooks/useFavorites'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { iconeDe, nomeSub, categoria } from '../../data/categories'
 import { registrar, linkWhatsApp, linkTel } from '../../lib/track'
+import { useOfertas } from '../../hooks/useOfertas'
 
 export const planoAtivo = b => (b.plan === 'premium' || b.plan === 'destaque') && (!b.plan_expires_at || new Date(b.plan_expires_at) > new Date()) ? b.plan : 'free'
 
@@ -34,6 +35,8 @@ export function Selo({ b, tam = 52 }) {
 
 function Texto({ b, dist, formatDistance }) {
   const plano = planoAtivo(b)
+  const { porLugar } = useOfertas()
+  const temOferta = porLugar.has(b.id)
   return (
     <div className="min-w-0 flex-1">
       <h3 className="line-clamp-2 text-[19px] font-extrabold leading-tight tracking-[-0.02em]">{b.name}</h3>
@@ -45,6 +48,7 @@ function Texto({ b, dist, formatDistance }) {
         <StatusPill st={b.st} />
         {plano !== 'free' && <ParceiroBadge plano={plano} />}
         {b.verified_at && <VerificadoBadge />}
+        {temOferta && <span className="inline-flex items-center rounded-full bg-[var(--broto)] px-2.5 py-1 text-[13px] font-bold leading-none text-[var(--araucaria)]">Oferta</span>}
       </div>
     </div>
   )

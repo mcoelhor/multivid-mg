@@ -12,6 +12,7 @@ import { Anuncie, AnuncieObrigado } from './pages/Anuncie'
 import { Roteiro } from './pages/Roteiro'
 import { Creditos } from './pages/Creditos'
 import { Uteis } from './pages/Uteis'
+import { Ofertas } from './pages/Ofertas'
 import { NaoEncontrada } from './pages/NaoEncontrada'
 import { AdminLogin } from './admin/AdminLogin'
 const MapPage = lazy(() => import('./pages/MapPage').then(m => ({ default: m.MapPage })))
@@ -22,6 +23,7 @@ const AdminBusinesses = lazy(() => import('./admin/AdminBusinesses').then(m => (
 const AdminPagamentos = lazy(() => import('./admin/AdminPagamentos').then(m => ({ default: m.AdminPagamentos })))
 const AdminReivindicacoes = lazy(() => import('./admin/AdminReivindicacoes').then(m => ({ default: m.AdminReivindicacoes })))
 const MeuNegocio = lazy(() => import('./pages/MeuNegocio').then(m => ({ default: m.MeuNegocio })))
+const AdminAvisos = lazy(() => import('./admin/AdminAvisos').then(m => ({ default: m.AdminAvisos })))
 const AdminEvents = lazy(() => import('./admin/AdminEvents').then(m => ({ default: m.AdminEvents })))
 import { useAdmin } from './admin/useAdmin'
 import { registrarVisita } from './lib/track'
@@ -83,7 +85,9 @@ export default function App() {
         <Route path="/roteiro" element={<Roteiro />} />
         <Route path="/creditos" element={<Creditos />} />
         <Route path="/uteis" element={<Uteis />} />
+        <Route path="/ofertas" element={<Ofertas />} />
         <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+        <Route path="/admin/avisos" element={<AdminGuard><AdminAvisos /></AdminGuard>} />
         <Route path="/admin/donos" element={<AdminGuard><AdminReivindicacoes /></AdminGuard>} />
         <Route path="/meu-negocio" element={<MeuNegocio />} />
         <Route path="/admin/pagamentos" element={<AdminGuard><AdminPagamentos /></AdminGuard>} />
