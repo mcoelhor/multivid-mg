@@ -150,7 +150,7 @@ export function Anuncie() {
           {MOTIVOS.map(([I, t, d], k) => (
             <li key={t} className="revela flex gap-4" style={{ '--i': k }}>
               <I size={24} className="mt-0.5 shrink-0 text-[var(--broto)]" />
-              <div><h2 className="text-[19px] font-extrabold tracking-[-0.02em]">{t}</h2><p className="mt-1 text-[16px] leading-relaxed text-white/75">{d}</p></div>
+              <div><h2 className="text-[19px] font-extrabold tracking-[-0.02em]">{t}</h2><p className="mt-1 text-[16px] leading-relaxed text-white/80">{d}</p></div>
             </li>
           ))}
         </ul>
@@ -170,7 +170,7 @@ export function Anuncie() {
                 <article key={p.id} className={`entra rounded-[var(--raio)] p-6 ${forte ? 'bg-[var(--musgo)] text-white' : 'bg-[var(--papel)]'}`} style={{ '--i': k }}>
                   <div className="flex items-baseline justify-between gap-3">
                     <h3 className="text-[26px] font-extrabold tracking-[-0.03em]">{p.nome}</h3>
-                    <p className="num text-[30px] font-extrabold tracking-[-0.03em]">{p.preco ? reais(p.preco) : 'R$ 0'}<span className={`text-[15px] font-medium ${forte ? 'text-white/70' : 'text-[var(--leve)]'}`}>{p.preco ? '/mês' : ''}</span></p>
+                    <p className="num text-[30px] font-extrabold tracking-[-0.03em]">{p.preco ? reais(p.preco) : 'R$ 0'}<span className={`text-[15px] font-medium ${forte ? 'text-white/85' : 'text-[var(--leve)]'}`}>{p.preco ? '/mês' : ''}</span></p>
                   </div>
                   {forte && <p className="mt-1 text-[15px] font-bold text-[var(--broto)]">O mais visto da vila</p>}
                   <ul className="mt-4 space-y-2.5">

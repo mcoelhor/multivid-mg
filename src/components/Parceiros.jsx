@@ -56,7 +56,7 @@ function CartaoParceiro({ id, p }) {
           )}
           <button onClick={() => setForm(v => !v)} aria-expanded={form} className={`botao flex-1 ${p.wa ? 'botao-sec' : 'botao-pri'}`}>Pedir orçamento</button>
           {p.site && (
-            <a href={`${p.site}?utm_source=monteverdemg&utm_medium=app`} target="_blank" rel="noopener noreferrer" onClick={() => registrar('parceiro', { term: `${id}:site` })} className="botao botao-sec w-12 px-0" aria-label={`Site da ${p.nome}`}>
+            <a href={`${p.site}?utm_source=monteverdemg&utm_medium=app`} target="_blank" rel="noopener noreferrer" onClick={() => registrar('parceiro', { term: `${id}:site` })} className="botao botao-sec h-12 w-12 min-h-0 px-0" aria-label={`Site da ${p.nome}`}>
               <Globe size={17} />
             </a>
           )}

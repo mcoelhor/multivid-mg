@@ -8,6 +8,7 @@ import { StatusPill, ParceiroBadge } from '../components/UI/Badge'
 import { InstagramIcon } from '../components/UI/Icon'
 import { BottomNav } from '../components/Layout/BottomNav'
 import { Rodape } from '../components/Layout/Rodape'
+import { useTitulo } from '../components/Layout/Layout'
 import { Parceiros } from '../components/Parceiros'
 import { nomeSub } from '../data/categories'
 import { semanaLinhas } from '../lib/horario'
@@ -45,6 +46,7 @@ export function BusinessDetail() {
   const { businesses: mesmos } = useBusinesses({ category: b?.category })
   const { isFavoriteBusiness, toggleBusiness } = useFavorites()
   const [horarios, setHorarios] = useState(false)
+  useTitulo(b ? `${b.name} · ${nomeSub(b)}` : 'Monte Verde MG')
 
   useEffect(() => { if (b?.id) registrar('view', { businessId: b.id }) }, [b?.id])
 
@@ -74,7 +76,7 @@ export function BusinessDetail() {
   const acao = (kind) => () => registrar(kind, { businessId: b.id })
 
   return (
-    <div className="flex min-h-dvh flex-col pb-safe">
+    <main className="flex min-h-dvh flex-col pb-safe">
       <div className="relative">
         <Fotos b={b} />
         <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="pressiona absolute left-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }} aria-label="Voltar"><ChevronLeft size={22} /></button>
@@ -102,20 +104,20 @@ export function BusinessDetail() {
           {(b.address || b.latitude) && <a href={linkRota(b)} target="_blank" rel="noopener noreferrer" onClick={acao('rota')} className={`botao botao-claro ${b.phone && b.whatsapp ? 'col-span-2' : ''}`} style={{ minHeight: 52 }}><Navigation size={18} />Como chegar</a>}
         </div>
 
-        <dl className="sobe mt-4 divide-y divide-[var(--nevoa)] rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': 2 }}>
+        <div className="sobe mt-4 divide-y divide-[var(--nevoa)] rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': 2 }}>
           {b.address && (
-            <div className="flex gap-3 p-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><div><dt className="sr-only">Endereço</dt><dd className="text-[15px]">{local}</dd></div></div>
+            <div className="flex gap-3 p-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><p className="text-[15px]"><span className="sr-only">Endereço: </span>{local}</p></div>
           )}
           {(b.phone || b.phone2) && (
-            <div className="flex gap-3 p-4"><Phone size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><dd className="num text-[15px]">
-              {b.phone && <a href={linkTel(b.phone)} onClick={acao('tel')} className="underline decoration-black/20 underline-offset-4">{b.phone}</a>}
-              {b.phone2 && <> · <a href={linkTel(b.phone2)} onClick={acao('tel')} className="underline decoration-black/20 underline-offset-4">{b.phone2}</a></>}
-            </dd></div>
+            <div className="flex gap-3 p-4"><Phone size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><p className="num flex flex-wrap items-center gap-x-1 text-[15px]">
+              {b.phone && <a href={linkTel(b.phone)} onClick={acao('tel')} className="inline-flex min-h-11 items-center underline decoration-black/20 underline-offset-4">{b.phone}</a>}
+              {b.phone2 && <> · <a href={linkTel(b.phone2)} onClick={acao('tel')} className="inline-flex min-h-11 items-center underline decoration-black/20 underline-offset-4">{b.phone2}</a></>}
+            </p></div>
           )}
           <div className="p-4">
-            <button onClick={() => setHorarios(v => !v)} aria-expanded={horarios} disabled={!semana.length} className="flex w-full items-center gap-3 text-left">
+            <button onClick={() => setHorarios(v => !v)} aria-expanded={horarios} disabled={!semana.length} className="flex min-h-11 w-full items-center gap-3 text-left">
               <Clock size={18} className="shrink-0 text-[var(--verde)]" />
-              <span className="flex-1 text-[15px]">{semana.length ? 'Horários da semana' : 'Horário não informado'}</span>
+              <span className="flex-1 text-[15px]">{semana.length ? 'Horários da semana' : <>Horário a confirmar. <Link to="/mais#corrigir" className="font-semibold text-[var(--musgo)] underline underline-offset-4">Sabe o horário?</Link></>}</span>
               {semana.length > 0 && <ChevronDown size={18} className="text-[var(--leve)] transition-transform duration-200" style={{ transform: horarios ? 'rotate(180deg)' : 'none' }} />}
             </button>
             <div className={`abre ${horarios ? 'aberto' : ''}`}><div>
@@ -138,9 +140,9 @@ export function BusinessDetail() {
           {b.email && (
             <a href={`mailto:${b.email}`} className="flex items-center gap-3 p-4"><Mail size={18} className="text-[var(--verde)]" /><span className="truncate text-[15px]">{b.email}</span></a>
           )}
-        </dl>
+        </div>
 
-        <Link to="/mais#corrigir" className="mt-3 flex items-center gap-2 px-1 text-[13px] text-[var(--leve)]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
+        <Link to="/mais#corrigir" className="mt-2 flex min-h-11 items-center gap-2 px-1 text-[14px] text-[var(--leve)]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
       </div>
 
       {(b.category === 'construcao' || b.category === 'imobiliarias') && <Parceiros contexto={b.category} />}
@@ -153,6 +155,6 @@ export function BusinessDetail() {
       )}
       <Rodape />
       <BottomNav />
-    </div>
+    </main>
   )
 }

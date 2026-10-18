@@ -9,7 +9,7 @@ import { useBusinesses } from '../hooks/useBusinesses'
 import { FOTOS } from '../data/fotos'
 import { agoraMV, DIAS, DIAS_NOME } from '../lib/horario'
 import { linkRota, registrar } from '../lib/track'
-import { COM_QUEM, GOSTOS, RITMOS, SLOTS, candidatos, montarRoteiro, alternativas, motivo, textoCompartilhar } from '../lib/roteiro'
+import { COM_QUEM, GOSTOS, RITMOS, SLOTS, candidatos, montarRoteiro, alternativas, motivo, textoCompartilhar, inicioPadrao } from '../lib/roteiro'
 
 const CHAVE = 'mv_roteiro_v1'
 const ler = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) } catch { return null } }
@@ -106,7 +106,7 @@ function Parada({ p, dia, perfil, primeira, ultima, onTrocar, onRemover, onSubir
             ) : (
               <h3 className="text-[19px] font-extrabold leading-tight tracking-[-0.02em]">{item.name}</h3>
             )}
-            <p className="mt-1 text-[15px] leading-snug text-[var(--leve)]">{motivo(item, p.slot, dia, perfil)}</p>
+            <p className="mt-1 text-[15px] leading-snug text-[var(--leve)]">{motivo(item, p.slot, dia, perfil, i)}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 px-2 pb-2">
@@ -175,7 +175,7 @@ function FolhaAdicionar({ aberta, onFechar, cands, dia, perfil, usados, onEscolh
 export function Roteiro() {
   const { businesses, loading } = useBusinesses({})
   const salvo = useMemo(ler, [])
-  const [perfil, setPerfil] = useState(salvo?.perfil || { dias: 2, inicio: agoraMV().dia, comQuem: 'casal', gostos: ['comida'], ritmo: 'calmo', semente: 7 })
+  const [perfil, setPerfil] = useState(salvo?.perfil || { dias: 2, inicio: inicioPadrao(), comQuem: 'casal', gostos: ['comida'], ritmo: 'calmo', semente: 7 })
   const [compacto, setCompacto] = useState(salvo?.roteiro || null)
   const [diaAtivo, setDiaAtivo] = useState(0)
   const [folha, setFolha] = useState(false)
@@ -250,6 +250,9 @@ export function Roteiro() {
         ))}
       </nav>
 
+      {d.paradas.length === 0 && (
+        <p className="mx-5 mt-4 rounded-[var(--raio)] bg-[var(--papel)] p-5 text-[16px] leading-relaxed text-[var(--leve)]">Por hoje já passou da hora das sugestões. Veja o dia seguinte ou adicione um jantar abaixo.</p>
+      )}
       <ol key={diaAtivo} className="space-y-7 px-5 pt-4">
         {d.paradas.map((p, i) => (
           <Parada key={`${p.item.id}-${i}`} p={p} dia={d.dia} perfil={perfil} i={i}

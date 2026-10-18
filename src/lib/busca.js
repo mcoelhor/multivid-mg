@@ -28,29 +28,36 @@ const SINONIMOS = {
   'materiais': ['cimento', 'material de construcao', 'tinta', 'deposito', 'chave de fenda', 'parafuso', 'lampada', 'cano'],
   'engenheiros': ['engenheiro', 'arquiteto', 'projeto', 'obra', 'construir', 'reforma', 'chale', 'terreno'],
   'compra-venda': ['imovel', 'casa', 'terreno', 'aluguel', 'comprar casa', 'lote', 'imobiliaria'],
-  'restaurantes': ['jantar', 'almoco', 'comer', 'fome', 'comida', 'truta', 'mineira', 'fondue', 'romantico', 'restaurante'],
+  'restaurantes': ['jantar', 'almoco', 'comer', 'fome', 'comida', 'truta', 'mineira', 'fondue', 'restaurante', 'bistro', 'giratorio', 'comida de fazenda'],
   'pizzarias': ['pizza', 'pizzaria'],
   'hamburguerias': ['hamburguer', 'lanche', 'burger'],
   'lanchonetes': ['lanche', 'salgado', 'rapido', 'lanchonete'],
-  'cafeterias': ['cafe', 'cafe da manha', 'chocolate quente', 'doce', 'strudel', 'torta'],
+  'cafeterias': ['cafe', 'cafe da manha', 'chocolate quente', 'doce', 'strudel', 'torta', 'cafe colonial', 'lanche da tarde'],
   'padarias': ['pao', 'padaria', 'cafe da manha'],
   'chocolaterias': ['chocolate', 'presente', 'lembranca'],
-  'bares': ['cerveja', 'chopp', 'bar', 'vinho', 'drink', 'beber'],
+  'bares': ['cerveja', 'chopp', 'bar', 'vinho', 'drink', 'beber', 'cervejaria', 'happy hour', 'destilaria'],
   'pousadas': ['pousada', 'hotel', 'chale', 'dormir', 'hospedagem', 'quarto', 'pernoite'],
-  'atrativos': ['passeio', 'trilha', 'crianca', 'chuva', 'parque', 'mirante', 'o que fazer'],
-  'passeios': ['quadriciclo', 'jeep', 'jipe', 'cavalo', 'tour', 'passeio', 'trenzinho'],
-  'artesanato': ['lembranca', 'souvenir', 'artesanato', 'presente'],
+  'atrativos': ['passeio', 'trilha', 'parque', 'mirante', 'o que fazer', 'aventura', 'adrenalina', 'radical', 'arborismo', 'tirolesa', 'escalada', 'caminhada', 'natureza', 'patinacao', 'gelo', 'voo', 'helicoptero', 'fazenda', 'cavalo', 'galeria', 'arte', 'ceramica', 'azeite', 'falcoaria'],
+  'passeios': ['quadriciclo', 'jeep', 'jipe', 'cavalo', 'tour', 'passeio', 'trenzinho', 'aventura', 'moto', 'city tour'],
+  'artesanato': ['lembranca', 'souvenir', 'artesanato', 'presente', 'malha', 'regional', 'produto local', 'lojinha', 'loja'],
   'pet-shops': ['pet shop', 'racao', 'coleira'],
 }
 
 /** Situações (atalhos da home). */
 export const SITUACOES = [
-  { id: 'chuva', rotulo: 'Dia de chuva', icone: 'CloudRain', subs: ['cafeterias', 'chocolaterias', 'restaurantes', 'bares', 'artesanato'] },
-  { id: 'criancas', rotulo: 'Com crianças', icone: 'Baby', subs: ['atrativos', 'passeios', 'pizzarias', 'hamburguerias', 'lanchonetes'] },
-  { id: 'a-dois', rotulo: 'A dois', icone: 'Heart', subs: ['restaurantes', 'bares', 'pousadas', 'cafeterias'] },
-  { id: 'noite', rotulo: 'À noite', icone: 'Moon', subs: ['restaurantes', 'pizzarias', 'bares', 'hamburguerias'] },
-  { id: 'pet', rotulo: 'Com pet', icone: 'Dog', subs: ['veterinarios', 'pet-shops', 'atrativos'] },
+  { id: 'chuva', rotulo: 'Dia de chuva', icone: 'CloudRain', tag: 'chuva', subs: ['chocolaterias', 'cafeterias', 'bares', 'artesanato', 'restaurantes'], termos: ['chuva', 'chovendo', 'coberto', 'frio'] },
+  { id: 'criancas', rotulo: 'Com crianças', icone: 'Baby', tag: 'criancas', subs: ['atrativos', 'passeios', 'pizzarias', 'hamburguerias', 'lanchonetes'], termos: ['crianca', 'criancas', 'filhos', 'familia', 'infantil'] },
+  { id: 'a-dois', rotulo: 'A dois', icone: 'Heart', tag: 'casal', subs: ['restaurantes', 'bares', 'cafeterias', 'pousadas'], termos: ['a dois', 'romantico', 'casal', 'namorada', 'namorado', 'lua de mel', 'aniversario'] },
+  { id: 'aventura', rotulo: 'Aventura', icone: 'Mountain', tag: 'aventura', subs: ['atrativos', 'passeios'], termos: ['aventura', 'adrenalina', 'radical', 'esporte'] },
+  { id: 'noite', rotulo: 'À noite', icone: 'Moon', tag: 'noite', subs: ['restaurantes', 'pizzarias', 'bares', 'hamburguerias'], termos: ['noite', 'a noite', 'hoje a noite', 'balada', 'jantar tarde'] },
+  { id: 'pet', rotulo: 'Com pet', icone: 'Dog', tag: 'pet', subs: ['veterinarios', 'pet-shops', 'atrativos'], termos: ['pet', 'cachorro', 'com cachorro', 'pet friendly'] },
 ]
+
+/** Situação que o termo descreve (id, rótulo ou palavras relacionadas), se houver. */
+export function situacaoDoTermo(termo) {
+  const t = norm(termo)
+  return SITUACOES.find(s => t === s.id || t === norm(s.rotulo) || s.termos.some(x => t === x || t.includes(x))) || null
+}
 
 /** Subcategorias que combinam com o termo, da mais forte para a mais fraca. */
 export function subsDoTermo(termo) {
@@ -63,9 +70,8 @@ export function subsDoTermo(termo) {
       if (s === t || t.includes(s) || (t.length >= 4 && s.includes(t))) { pts[sub] = (pts[sub] || 0) + 2; break }
     }
   }
-  for (const sit of SITUACOES) {
-    if (t === sit.id || t.includes(norm(sit.rotulo))) sit.subs.forEach(s => { pts[s] = (pts[s] || 0) + 1 })
-  }
+  const sit = situacaoDoTermo(t)
+  if (sit) sit.subs.forEach((s, i) => { pts[s] = (pts[s] || 0) + 1 - i * 0.01 })
   return Object.entries(pts).sort((a, b) => b[1] - a[1]).map(([s]) => s)
 }
 
@@ -74,18 +80,28 @@ export function buscar(lista, termo) {
   const t = norm(termo)
   if (!t) return []
   const subs = subsDoTermo(t)
+  const sit = situacaoDoTermo(t)
   const out = []
-  for (const b of lista) {
+  for (let b of lista) {
     let score = 0
+    const tags = (b.tags || []).map(norm)
     const pos = subs.indexOf(b.subcategory)
     if (pos >= 0) score += 100 - pos * 5
+    // Curadoria do guia: lugar marcado para a situação vai na frente de tudo
+    if (sit && tags.includes(sit.tag)) { score += 300; b = { ...b, curado: sit.id } }
     const nome = norm(b.name)
     if (nome.includes(t)) score += 80
-    else if (t.length >= 3 && (b.tags || []).some(tag => norm(tag).includes(t))) score += 40
+    else if (t.length >= 3 && tags.some(tag => tag.includes(t))) score += 40
     else if (t.length >= 4 && norm(`${b.description} ${b.address}`).includes(t)) score += 15
     if (score) out.push({ ...b, score })
   }
   return out
+}
+
+const URGENTE = /\b(dor|febre|machuc|acidente|torceu|corte|passando mal|socorro|hospital|remedio|farmacia|pneu|guincho|quebrou|bateria|nao liga|policia|roubo|furto|bombeiro|samu|ambulancia|urgenc|emergenc)/
+/** O termo parece um apuro (saúde, carro, segurança)? Decide se o atalho de emergência aparece. */
+export function ehUrgente(termo) {
+  return URGENTE.test(norm(termo))
 }
 
 const OBRA = ['obra', 'constru', 'reforma', 'engenhe', 'arquitet', 'pedreiro', 'chale', 'terreno', 'projeto', 'empreiteir', 'casa', 'imovel', 'lote', 'telhado', 'fundacao']

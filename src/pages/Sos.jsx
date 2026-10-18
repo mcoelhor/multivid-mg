@@ -22,7 +22,7 @@ export function Sos() {
   return (
     <Layout title="Precisa de ajuda?" subtitle="Monte Verde e Camanducaia" tom="sos">
       <div className="bg-[var(--sos-fundo)] px-5 pb-4 pt-3">
-        <p className="flex items-start gap-1.5 text-[13px] font-medium text-[#8a3b2e]">
+        <p className="flex items-start gap-1.5 text-[14px] font-medium text-[#7a2f23]">
           <Clock size={14} className="mt-0.5 shrink-0" /><span>Agora: {DIAS_NOME[DIAS[a.dia]]}, <span className="num">{hhmm(a.min)}</span>. Quem está aberto aparece primeiro.</span>
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">
@@ -30,7 +30,7 @@ export function Sos() {
             <a key={b.id} href={linkTel(b.phone)} onClick={() => registrar('tel', { businessId: b.id })}
               className="cai pressiona flex flex-col items-center rounded-[var(--raio)] bg-white py-3" style={{ '--i': i }}>
               <span className="num text-[30px] font-extrabold leading-none text-[var(--sos)]">{b.phone}</span>
-              <span className="mt-1 text-xs font-medium">{b.name.split(' —')[0].replace(' Militar', '')}</span>
+              <span className="mt-1 text-[13px] font-medium">{b.name.split(' —')[0].replace(' Militar', '')}</span>
             </a>
           ))}
         </div>
@@ -62,7 +62,7 @@ export function Sos() {
       })}
 
       <p className="mx-5 mt-6 border-t border-black/5 pt-4 text-[13px] text-[var(--leve)]">
-        Horários conferidos em fontes públicas. Viu algo errado? <a href="/mais#corrigir" className="font-semibold text-[var(--verde)] underline">Avise a gente</a>.
+        Horários conferidos em fontes públicas. Viu algo errado? <a href="/mais#corrigir" className="inline-flex min-h-11 items-center font-semibold text-[var(--verde)] underline underline-offset-4">Avise a gente</a>.
       </p>
       <a href="tel:192" className="botao botao-sos mx-5 mt-4 w-[calc(100%-2rem)]"><Phone size={16} />Emergência médica: 192</a>
       <div className="h-4" />

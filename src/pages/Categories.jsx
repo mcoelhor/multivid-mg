@@ -47,6 +47,7 @@ export function Categories() {
             </div>
           )
         })}
+        <Link to="/mapa" className="mt-4 flex min-h-12 items-center gap-2 text-[16px] font-bold text-[var(--musgo)]">Ver tudo no mapa <ArrowRight size={17} /></Link>
       </div>
     </Layout>
   )
