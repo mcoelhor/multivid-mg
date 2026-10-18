@@ -18,14 +18,14 @@ export function Rodape() {
         <Siren size={22} className="shrink-0" />
         <span className="flex-1">
           <span className="block text-[17px] font-bold leading-tight">Precisa de ajuda agora?</span>
-          <span className="num block text-[14px] text-white/85">Farmácia, pronto-socorro, guincho · 190 · 192 · 193</span>
+          <span className="num block text-[14px] text-white/90">Farmácia, pronto-socorro, guincho · 190 · 192 · 193</span>
         </span>
         <ArrowRight size={20} className="shrink-0" />
       </Link>
 
-      <nav className="mt-10 grid grid-cols-2 gap-x-4 gap-y-3" aria-label="Links do rodapé">
+      <nav className="mt-8 grid grid-cols-2 gap-x-4 gap-y-1" aria-label="Links do rodapé">
         {LINKS.map(([t, to]) => (
-          <Link key={to} to={to} className="text-[15px] text-white/80 transition-colors duration-150 hover:text-white">{t}</Link>
+          <Link key={to} to={to} className="flex min-h-11 items-center text-[15px] text-white/80 transition-colors duration-150 hover:text-white">{t}</Link>
         ))}
       </nav>
 

@@ -1,11 +1,11 @@
 {
-  "name": "Portal Monte Verde",
+  "name": "Monte Verde MG · guia da vila",
   "short_name": "Monte Verde",
-  "description": "O que você precisa em Monte Verde, aberto agora.",
+  "description": "Guia e roteiro de Monte Verde, MG: o que está aberto agora, o que fazer, onde ficar.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f1eb",
-  "theme_color": "#14532d",
+  "background_color": "#eef0ec",
+  "theme_color": "#121a15",
   "orientation": "portrait",
   "icons": [
     {

@@ -53,7 +53,7 @@ export function statusHorario(b, agora = agoraMV()) {
   if (!conhecidos.length) {
     return plantao
       ? { estado: 'plantao', rotulo: 'Plantão 24h por telefone', curto: 'Plantão' }
-      : { estado: 'desconhecido', rotulo: 'Horário não informado', curto: '' }
+      : { estado: 'desconhecido', rotulo: 'Horário a confirmar', curto: '' }
   }
   const { dia, min } = agora
   const hoje = DIAS[dia], ontem = DIAS[(dia + 6) % 7]

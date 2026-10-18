@@ -1,5 +1,5 @@
 // Monta um roteiro de viagem com os lugares do guia, respeitando o horário de cada dia.
-import { DIAS, parseDia, hhmm } from './horario'
+import { DIAS, parseDia, hhmm, agoraMV } from './horario'
 import { norm } from './busca'
 import { FOTOS } from '../data/fotos'
 
@@ -41,11 +41,21 @@ const PERFIL = {
 }
 
 export const SLOTS = {
-  manha: { rotulo: 'Manhã', hora: 600, icone: 'Sunrise' },
-  almoco: { rotulo: 'Almoço', hora: 750, icone: 'UtensilsCrossed' },
-  tarde: { rotulo: 'Tarde', hora: 900, icone: 'Mountain' },
-  cafe: { rotulo: 'Café da tarde', hora: 1000, icone: 'Coffee' },
-  jantar: { rotulo: 'Jantar', hora: 1170, icone: 'Moon' },
+  manha: { rotulo: 'Manhã', hora: 600, fim: 720, icone: 'Sunrise' },
+  almoco: { rotulo: 'Almoço', hora: 750, fim: 900, icone: 'UtensilsCrossed' },
+  tarde: { rotulo: 'Tarde', hora: 900, fim: 1050, icone: 'Mountain' },
+  cafe: { rotulo: 'Café da tarde', hora: 1000, fim: 1110, icone: 'Coffee' },
+  jantar: { rotulo: 'Jantar', hora: 1170, fim: 1440, icone: 'Moon' },
+}
+
+/** No dia de hoje, períodos que já passaram não entram no roteiro. */
+export function slotPassou(slot, dia, agora = agoraMV()) {
+  return dia === agora.dia && agora.min >= SLOTS[slot].fim - 30
+}
+
+/** Dia de início padrão: hoje, ou amanhã se já passou das 19h. */
+export function inicioPadrao(agora = agoraMV()) {
+  return agora.min >= 1140 ? (agora.dia + 1) % 7 : agora.dia
 }
 
 /** Aberto naquele dia e hora? true | false | null (não sabemos) */
@@ -70,7 +80,7 @@ export function horarioDoDia(b, dia) {
 const reNome = (b, re) => re.test(norm(b.name + ' ' + (b.description || '')))
 
 function tagsDe(b) {
-  const t = new Set(PERFIL[b.slug] || [])
+  const t = new Set([...(PERFIL[b.slug] || []), ...(b.tags || []).map(norm)])
   const s = b.subcategory
   if (b.category === 'turismo' && !PERFIL[b.slug]) t.add('natureza')
   if (['cafeterias', 'chocolaterias', 'padarias'].includes(s)) t.add('cafe')
@@ -142,6 +152,7 @@ export function montarRoteiro(lugares, perfil) {
     for (const slot of ordemSlots) {
       // Calmo: o café da tarde entra no lugar da tarde quando o viajante gosta de café
       const s = slot === 'tarde' && perfil.ritmo !== 'cheio' && perfil.gostos.includes('cafe') && k % 2 === 1 ? 'cafe' : slot
+      if (k === 0 && slotPassou(s, dia)) continue
       const melhor = escolher(cands, s, dia, perfil, sorte, usados)
       if (melhor) { usados.add(melhor.id); paradas.push({ slot: s, item: melhor }) }
     }
@@ -164,16 +175,25 @@ export function alternativas(cands, slot, dia, perfil, sorte = rng(perfil.sement
     .map(x => x.c)
 }
 
-/** Por que esta sugestão: uma linha curta para o turista. */
-export function motivo(item, slot, dia, perfil) {
+const MOTIVOS = {
+  casal: ['escolha do guia para casais', 'clima a dois', 'bom para um jantar a dois'],
+  criancas: ['escolha do guia com crianças', 'as crianças gostam', 'espaço para a criançada'],
+  aventura: ['escolha do guia para aventura', 'para quem quer adrenalina'],
+  chuva: ['coberto, vale até na chuva'],
+  regional: ['produto da região'],
+  noite: ['bom à noite'],
+}
+
+/** Por que esta sugestão: hora real e, quando há curadoria, um motivo que varia. */
+export function motivo(item, slot, dia, perfil, k = 0) {
   if (item.tipo === 'livre') return item.descricao
   const b = item.b
   const h = horarioDoDia(b, dia)
-  const partes = []
-  if (h && h !== 'fechado') partes.push(`Abre ${h}`)
-  else partes.push('Confirme o horário antes de ir')
-  if (perfil.comQuem === 'familia' && item.tags.has('familia')) partes.push('bom com crianças')
-  else if (perfil.comQuem === 'casal' && item.tags.has('casal')) partes.push('clima a dois')
+  const partes = [h && h !== 'fechado' ? `Abre ${h}` : 'Horário não confirmado: ligue antes']
+  const curadas = (b.tags || []).map(norm)
+  const tagPerfil = { casal: 'casal', familia: 'criancas', amigos: 'noite', sozinho: '' }[perfil.comQuem]
+  const tag = [tagPerfil, ...perfil.gostos.map(g => ({ aventura: 'aventura', cultura: 'regional', compras: 'regional' })[g])].find(t => t && curadas.includes(t))
+  if (tag) partes.push(MOTIVOS[tag][k % MOTIVOS[tag].length])
   return partes.join(' · ')
 }
 

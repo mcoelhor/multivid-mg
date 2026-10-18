@@ -1,11 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Home, Compass, Route, Map, Heart } from 'lucide-react'
+import { Home, Compass, Route, LifeBuoy, Heart } from 'lucide-react'
 
 const TABS = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/categorias', icon: Compass, label: 'Explorar' },
   { path: '/roteiro', icon: Route, label: 'Roteiro', meio: true },
-  { path: '/mapa', icon: Map, label: 'Mapa' },
+  { path: '/uteis', icon: LifeBuoy, label: 'Úteis', tambem: ['/sos'] },
   { path: '/favoritos', icon: Heart, label: 'Salvos' },
 ]
 
@@ -13,7 +13,7 @@ const TABS = [
 export function BottomNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const ativo = p => (p === '/' ? pathname === '/' : pathname.startsWith(p))
+  const ativo = (p, tambem = []) => (p === '/' ? pathname === '/' : [p, ...tambem].some(x => pathname.startsWith(x)))
 
   return (
     <nav
@@ -22,8 +22,8 @@ export function BottomNav() {
       aria-label="Navegação principal"
     >
       <div className="flex h-[68px] items-stretch px-2">
-        {TABS.map(({ path, icon: Icon, label, meio }) => {
-          const on = ativo(path)
+        {TABS.map(({ path, icon: Icon, label, meio, tambem }) => {
+          const on = ativo(path, tambem)
           return (
             <button
               key={path}
@@ -38,7 +38,7 @@ export function BottomNav() {
               ) : (
                 <Icon size={22} strokeWidth={on ? 2.3 : 1.7} className={`transition-colors duration-200 ${on ? 'text-white' : 'text-white/55'}`} />
               )}
-              <span className={`text-[12px] font-bold transition-colors duration-200 ${on ? 'text-white' : 'text-white/55'}`}>{label}</span>
+              <span className={`text-[13px] font-bold transition-colors duration-200 ${on ? 'text-white' : 'text-white/55'}`}>{label}</span>
               {!meio && <span className={`absolute top-1.5 h-1 w-1 rounded-full bg-[var(--broto)] transition-opacity duration-200 ${on ? 'opacity-100' : 'opacity-0'}`} />}
             </button>
           )

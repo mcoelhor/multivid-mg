@@ -20,7 +20,7 @@ export function Header({ title, showBack, showSearch, onSearchClick, subtitle, t
         )}
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[24px] font-extrabold leading-tight tracking-[-0.03em]">{title}</h1>
-          {subtitle && <p className={`mt-0.5 truncate text-[14px] ${escuro ? 'text-white/70' : 'text-[var(--leve)]'}`}>{subtitle}</p>}
+          {subtitle && <p className={`mt-0.5 truncate text-[14px] ${escuro ? 'text-white/85' : 'text-[var(--leve)]'}`}>{subtitle}</p>}
         </div>
         {showSearch && (
           <button onClick={onSearchClick || (() => navigate('/busca'))} className={`pressiona flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${botao}`} aria-label="Buscar">
