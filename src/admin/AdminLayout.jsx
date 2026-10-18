@@ -1,57 +1,34 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Building2, Calendar, Tag, ArrowLeft, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Calendar, Inbox, Search, ArrowLeft, LogOut, Wallet } from 'lucide-react'
+import { sair } from './useAdmin'
 
-const NAV_ITEMS = [
-  { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-  { path: '/admin/empresas', icon: Building2, label: 'Empresas' },
+const NAV = [
+  { path: '/admin', icon: LayoutDashboard, label: 'Painel', exact: true },
+  { path: '/admin/pagamentos', icon: Wallet, label: 'Pagamentos' },
+  { path: '/admin/leads', icon: Inbox, label: 'Leads' },
+  { path: '/admin/buscas', icon: Search, label: 'Buscas' },
+  { path: '/admin/empresas', icon: Building2, label: 'Lugares' },
   { path: '/admin/eventos', icon: Calendar, label: 'Eventos' },
-  { path: '/admin/categorias', icon: Tag, label: 'Categorias' },
 ]
 
 export function AdminLayout({ children }) {
   const navigate = useNavigate()
-  const location = useLocation()
-
-  const isActive = (path, exact) => exact ? location.pathname === path : location.pathname.startsWith(path)
-
-  const handleLogout = () => {
-    localStorage.removeItem('multivid_admin')
-    navigate('/')
-  }
+  const { pathname } = useLocation()
+  const ativo = (p, exato) => (exato ? pathname === p : pathname.startsWith(p))
 
   return (
-    <div className="min-h-dvh flex flex-col" style={{ background: '#F4F1EB' }}>
-      <header className="sticky top-0 z-40 px-4 py-3 flex items-center gap-3" style={{ background: '#14532d' }}>
-        <button onClick={() => navigate('/')} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white">
-          <ArrowLeft size={16} />
-        </button>
-        <div className="flex-1">
-          <p className="text-white font-bold text-base">Painel Admin</p>
-          <p className="text-emerald-300 text-xs">Multivid MG</p>
-        </div>
-        <button onClick={handleLogout} className="flex items-center gap-1.5 text-emerald-200 text-xs font-medium">
-          <LogOut size={14} /> Sair
-        </button>
+    <div className="flex min-h-dvh flex-col bg-[var(--creme)]">
+      <header className="sticky top-0 z-40 flex items-center gap-3 bg-[var(--verde)] px-4 py-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
+        <button onClick={() => navigate('/')} className="pressiona flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white" aria-label="Voltar ao app"><ArrowLeft size={17} /></button>
+        <div className="flex-1"><p className="font-bold text-white">Painel do portal</p><p className="text-xs text-white/70">Monte Verde MG</p></div>
+        <button onClick={async () => { await sair(); navigate('/') }} className="flex items-center gap-1.5 text-xs font-semibold text-white/80"><LogOut size={14} />Sair</button>
       </header>
-
-      <nav className="flex overflow-x-auto gap-1 px-4 py-2 bg-white border-b border-gray-100 scrollbar-hide">
-        {NAV_ITEMS.map(({ path, icon: Icon, label, exact }) => (
-          <button
-            key={path}
-            onClick={() => navigate(path)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-              isActive(path, exact) ? 'text-white' : 'text-gray-500 bg-gray-50'
-            }`}
-            style={isActive(path, exact) ? { background: '#14532d' } : {}}
-          >
-            <Icon size={14} /> {label}
-          </button>
+      <nav className="flex gap-1.5 overflow-x-auto bg-white px-3 py-2 scrollbar-hide">
+        {NAV.map(({ path, icon: I, label, exact }) => (
+          <button key={path} onClick={() => navigate(path)} aria-current={ativo(path, exact) ? 'page' : undefined} className={`chip ${ativo(path, exact) ? 'ativo' : ''}`}><I size={14} />{label}</button>
         ))}
       </nav>
-
-      <main className="flex-1 p-4 pb-8">
-        {children}
-      </main>
+      <main className="page-transition flex-1 p-4 pb-10">{children}</main>
     </div>
   )
 }

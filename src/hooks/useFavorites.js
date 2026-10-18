@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const STORAGE_KEY = 'multivid_favorites'
+const STORAGE_KEY = 'monteverde_favoritos'
+const CHAVE_ANTIGA = 'multivid_favorites' // favoritos salvos antes da troca de nome
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(CHAVE_ANTIGA)
       return stored ? JSON.parse(stored) : { businesses: [], events: [] }
     } catch {
       return { businesses: [], events: [] }

@@ -1,85 +1,52 @@
-import { useNavigate } from 'react-router-dom'
-import { Heart, Flame, Settings, Info, Building2, ChevronRight } from 'lucide-react'
+import { useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Heart, Calendar, Store, Settings, ArrowRight, Download, Route, Siren, Image } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
-import { MOCK_PROMOTIONS } from '../data/mockData'
+import { LeadForm } from '../components/LeadForm'
+import { useInstalar } from '../hooks/useInstalar'
 
-function PromotionCard({ promo }) {
+function Linha({ icon: I, label, onClick, destaque }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-      {promo.image && (
-        <img src={promo.image} alt={promo.title} className="w-full h-36 object-cover" loading="lazy" />
-      )}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <span className="text-xs text-gray-400 font-medium">{promo.business_name}</span>
-            <h3 className="font-bold text-gray-900 text-sm mt-0.5">{promo.title}</h3>
-          </div>
-          <span className="shrink-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-            <Flame size={10} /> {promo.discount}
-          </span>
-        </div>
-        <p className="text-xs text-gray-500 mt-2 line-clamp-2">{promo.description}</p>
-        <p className="text-xs text-gray-400 mt-1">
-          Válido até {new Date(promo.valid_until + 'T00:00:00').toLocaleDateString('pt-BR')}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function MenuRow({ icon: Icon, label, onClick, badge }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl"
-    >
-      <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
-        <Icon size={20} className="text-green-800" />
-      </div>
-      <span className="flex-1 text-sm font-medium text-gray-800 text-left">{label}</span>
-      {badge && (
-        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full mr-1">{badge}</span>
-      )}
-      <ChevronRight size={16} className="text-gray-400" />
+    <button onClick={onClick} className={`pressiona flex w-full items-center gap-4 rounded-[var(--raio)] p-4 text-left ${destaque ? 'bg-[var(--musgo)] text-white' : 'bg-[var(--papel)]'}`}>
+      <I size={21} className={destaque ? 'text-[var(--broto)]' : 'text-[var(--musgo)]'} />
+      <span className="flex-1 text-[17px] font-bold">{label}</span>
+      <ArrowRight size={18} className={destaque ? 'text-white/70' : 'text-[var(--leve)]'} />
     </button>
   )
 }
 
 export function More() {
   const navigate = useNavigate()
+  const { hash } = useLocation()
+  const { podeInstalar, instalar, ios } = useInstalar()
+  useEffect(() => { if (hash) setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' }), 120) }, [hash])
 
   return (
-    <Layout title="Mais" subtitle="Multivid MG">
-      <div className="px-4 pt-4 pb-4 space-y-5">
-        <div>
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">Ofertas</h2>
-          <div className="space-y-3">
-            {MOCK_PROMOTIONS.map(p => <PromotionCard key={p.id} promo={p} />)}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">Menu</h2>
-          <div className="space-y-2">
-            <MenuRow icon={Heart} label="Meus Favoritos" onClick={() => navigate('/favoritos')} />
-            <MenuRow icon={Building2} label="Cadastrar minha empresa" onClick={() => navigate('/admin')} />
-            <MenuRow icon={Settings} label="Painel Administrativo" onClick={() => navigate('/admin')} />
-            <MenuRow icon={Info} label="Sobre o Multivid MG" onClick={() => {}} />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-900 to-emerald-700 rounded-2xl p-5 text-white text-center">
-          <p className="text-2xl mb-2">🌿</p>
-          <h3 className="font-bold text-lg">Multivid MG</h3>
-          <p className="text-emerald-200 text-sm mt-1">
-            O guia completo de Monte Verde e região.
-          </p>
-          <p className="text-emerald-300 text-xs mt-3">
-            Monte Verde · Camanducaia · Região
-          </p>
-        </div>
+    <Layout title="Mais">
+      <div className="space-y-2 px-5 pt-2">
+        {(podeInstalar || ios) && (
+          <Linha icon={Download} destaque label="Instalar o app no celular" onClick={() => (podeInstalar ? instalar() : alert('No iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início".'))} />
+        )}
+        <Linha icon={Route} label="Meu roteiro" onClick={() => navigate('/roteiro')} />
+        <Linha icon={Heart} label="Lugares salvos" onClick={() => navigate('/favoritos')} />
+        <Linha icon={Calendar} label="Eventos" onClick={() => navigate('/eventos')} />
+        <Linha icon={Siren} label="Emergência e contatos úteis" onClick={() => navigate('/sos')} />
+        <Linha icon={Store} label="Anuncie seu negócio" onClick={() => navigate('/anuncie')} />
+        <Linha icon={Image} label="Créditos das fotos" onClick={() => navigate('/creditos')} />
+        <Linha icon={Settings} label="Área do administrador" onClick={() => navigate('/admin')} />
       </div>
+
+      <section id="cadastro" className="px-5 pt-12" style={{ scrollMarginTop: 90 }}>
+        <h2 className="titulo">Cadastro grátis</h2>
+        <p className="mb-4 mt-2 text-[16px] leading-relaxed text-[var(--leve)]">Tem comércio ou serviço em Monte Verde? Mande os dados e colocamos sua página no ar, sem custo.</p>
+        <LeadForm empresa="portal" interesse="anunciar" botao="Quero meu cadastro grátis" />
+      </section>
+
+      <section id="corrigir" className="px-5 pt-12" style={{ scrollMarginTop: 90 }}>
+        <h2 className="titulo">Achou algo errado?</h2>
+        <p className="mb-4 mt-2 text-[16px] leading-relaxed text-[var(--leve)]">Telefone que não atende, horário diferente, lugar que fechou: avise que a gente corrige.</p>
+        <LeadForm empresa="portal" interesse="correcao" botao="Enviar correção" />
+      </section>
     </Layout>
   )
 }

@@ -12,8 +12,7 @@ function InstagramIcon({ size = 16, className = '' }) {
 import { Layout } from '../components/Layout/Layout'
 import { EventCard } from '../components/UI/EventCard'
 import { LoadingSpinner } from '../components/UI/LoadingSpinner'
-import { useEvents } from '../hooks/useEvents'
-import { useFavorites } from '../hooks/useFavorites'
+import { useEvents, useEvent } from '../hooks/useEvents'
 
 const DATE_FILTERS = [
   { id: null, label: 'Todos' },
@@ -26,12 +25,12 @@ const DATE_FILTERS = [
 
 const CATEGORY_FILTERS = [
   { id: null, label: 'Todas' },
-  { id: 'musica', label: '🎵 Música' },
-  { id: 'gastronomia', label: '🍽 Gastronomia' },
-  { id: 'festival', label: '🎉 Festival' },
-  { id: 'turismo', label: '🏔 Turismo' },
-  { id: 'feiras', label: '🛍 Feiras' },
-  { id: 'cultura', label: '🎭 Cultura' },
+  { id: 'musica', label: 'Música' },
+  { id: 'gastronomia', label: 'Gastronomia' },
+  { id: 'festival', label: 'Festival' },
+  { id: 'turismo', label: 'Turismo' },
+  { id: 'feiras', label: 'Feiras' },
+  { id: 'cultura', label: 'Cultura' },
 ]
 
 function formatDate(dateStr) {
@@ -47,7 +46,7 @@ export function Events() {
   return (
     <Layout title="Eventos" subtitle="Monte Verde e região">
       <div className="pt-3">
-        <div className="flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto px-5 pb-2 scrollbar-hide">
           {DATE_FILTERS.map(f => (
             <button
               key={String(f.id)}
@@ -62,7 +61,7 @@ export function Events() {
           ))}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-hide">
           {CATEGORY_FILTERS.map(f => (
             <button
               key={String(f.id)}
@@ -81,12 +80,11 @@ export function Events() {
           <LoadingSpinner />
         ) : events.length === 0 ? (
           <div className="flex flex-col items-center py-16 px-8 text-center">
-            <span className="text-5xl mb-4">📅</span>
-            <p className="text-gray-600 font-medium">Nenhum evento encontrado</p>
-            <p className="text-sm text-gray-400 mt-1">Tente outro período ou categoria</p>
+            <p className="text-gray-700 font-semibold">Nenhum evento neste período</p>
+            <p className="text-sm text-gray-500 mt-1">A agenda de Monte Verde está sendo montada. Tem um evento? Avise pelo menu Mais.</p>
           </div>
         ) : (
-          <div className="px-4 space-y-4 pb-4">
+          <div className="px-5 space-y-4 pb-4">
             {events.map(ev => <EventCard key={ev.id} event={ev} />)}
           </div>
         )}
@@ -98,14 +96,12 @@ export function Events() {
 export function EventDetail() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const { events } = useEvents({})
-  const { isFavoriteEvent, toggleEvent } = useFavorites()
-  const event = events.find(e => e.id === id)
+  const { event, loading } = useEvent(id)
+  if (loading) return <Layout title="Evento" showBack><div className="esqueleto m-4 h-64 rounded-[var(--raio)]" /></Layout>
 
   if (!event) {
     return (
       <div className="flex flex-col items-center justify-center min-h-dvh gap-3 pb-20">
-        <span className="text-5xl">😕</span>
         <p className="text-gray-600 font-medium">Evento não encontrado</p>
         <button onClick={() => navigate('/eventos')} className="text-green-800 text-sm font-semibold">
           Ver todos os eventos
@@ -115,7 +111,7 @@ export function EventDetail() {
   }
 
   function openWhatsApp() {
-    const msg = encodeURIComponent(`Olá! Vi o evento "${event.title}" no Multivid MG.`)
+    const msg = encodeURIComponent(`Olá! Vi o evento "${event.title}" no Portal Monte Verde.`)
     window.open(`https://wa.me/${event.whatsapp}?text=${msg}`, '_blank')
   }
 
@@ -140,7 +136,7 @@ export function EventDetail() {
             </span>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-4 space-y-2.5">
+          <div className="bg-gray-50 rounded-[var(--raio)] p-4 space-y-2.5">
             <div className="flex items-center gap-3 text-sm">
               <Calendar size={16} className="text-green-700 shrink-0" />
               <span className="text-gray-700">{formatDate(event.date_start)}</span>
@@ -167,12 +163,12 @@ export function EventDetail() {
 
           <div className="space-y-2">
             {event.whatsapp && (
-              <button onClick={openWhatsApp} className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-green-500 text-white font-semibold text-sm">
+              <button onClick={openWhatsApp} className="w-full flex items-center justify-center gap-2 py-3 rounded-[var(--raio)] bg-green-500 text-white font-semibold text-sm">
                 <MessageCircle size={18} /> Falar no WhatsApp
               </button>
             )}
             {(event.latitude || event.location) && (
-              <button onClick={openMaps} className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-50 text-amber-800 font-semibold text-sm border border-amber-200">
+              <button onClick={openMaps} className="w-full flex items-center justify-center gap-2 py-3 rounded-[var(--raio)] bg-amber-50 text-amber-800 font-semibold text-sm border border-amber-200">
                 <MapPin size={18} /> Como chegar
               </button>
             )}

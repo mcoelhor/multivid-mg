@@ -1,99 +1,92 @@
 import { useNavigate } from 'react-router-dom'
-import { Heart, MapPin, MessageCircle } from 'lucide-react'
-import { StarRating } from './StarRating'
-import { OpenBadge } from './Badge'
+import { Heart, MapPin, MessageCircle, Phone } from 'lucide-react'
+import { Icon } from './Icon'
+import { StatusPill, ParceiroBadge } from './Badge'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useGeolocation } from '../../hooks/useGeolocation'
-import { CATEGORIES } from '../../data/categories'
+import { iconeDe, nomeSub, categoria } from '../../data/categories'
+import { registrar, linkWhatsApp, linkTel } from '../../lib/track'
 
-function getCategoryInfo(slug) {
-  return CATEGORIES.find(c => c.id === slug) || null
-}
+export const planoAtivo = b => (b.plan === 'premium' || b.plan === 'destaque') && (!b.plan_expires_at || new Date(b.plan_expires_at) > new Date()) ? b.plan : 'free'
 
-function openWhatsApp(whatsapp, businessName) {
-  const msg = encodeURIComponent(`Olá! Vi o(a) ${businessName} no Multivid MG e gostaria de mais informações.`)
-  window.open(`https://wa.me/${whatsapp}?text=${msg}`, '_blank')
-}
-
-export function BusinessCard({ business }) {
-  const navigate = useNavigate()
-  const { isFavoriteBusiness, toggleBusiness } = useFavorites()
-  const { getDistance, formatDistance } = useGeolocation()
-
-  const cat = getCategoryInfo(business.category)
-  const isFav = isFavoriteBusiness(business.id)
-  const dist = business.latitude ? getDistance(business.latitude, business.longitude) : null
-
+/** Topo com foto do lugar; sem foto, um campo chapado na cor do tipo com o ícone. */
+export function Capa({ b, alto = 'h-40', grande = false }) {
+  if (b.images?.[0]) {
+    return <img src={b.images[0]} alt="" className={`w-full ${alto} object-cover`} loading="lazy" />
+  }
+  const tint = categoria(b.category)?.tint || '#2c6a45'
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-98 transition-transform">
-      <div className="relative">
-        {business.images?.[0] ? (
-          <img
-            src={business.images[0]}
-            alt={business.name}
-            className="w-full h-44 object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className="w-full h-44 flex items-center justify-center text-5xl"
-            style={{ background: cat?.bg || '#F3F4F6' }}
-          >
-            {cat?.icon || '🏪'}
-          </div>
-        )}
-        <button
-          onClick={(e) => { e.stopPropagation(); toggleBusiness(business.id) }}
-          className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm"
-        >
-          <Heart size={16} fill={isFav ? '#EF4444' : 'none'} stroke={isFav ? '#EF4444' : '#6B7280'} />
-        </button>
-        {business.featured && (
-          <span className="absolute top-3 left-3 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full">
-            ⭐ Destaque
-          </span>
-        )}
-      </div>
+    <div className={`relative w-full ${alto} overflow-hidden capa-sem-foto`} style={{ '--tint': tint }}>
+      <Icon name={iconeDe(b)} size={grande ? 88 : 48} strokeWidth={1.2} className="absolute bottom-8 right-6 text-white/35" />
+    </div>
+  )
+}
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-semibold text-gray-900 text-base leading-tight line-clamp-1 flex-1">
-            {business.name}
-          </h3>
-          <OpenBadge isOpen={business.isOpen} />
-        </div>
+/** Quadrado com o ícone do tipo, na cor da categoria. */
+export function Selo({ b, tam = 52 }) {
+  const tint = categoria(b.category)?.tint || '#2c6a45'
+  return (
+    <span className="flex shrink-0 items-center justify-center rounded-[14px] text-white" style={{ width: tam, height: tam, background: tint }}>
+      <Icon name={iconeDe(b)} size={Math.round(tam * 0.44)} strokeWidth={1.9} />
+    </span>
+  )
+}
 
-        <p className="text-sm text-gray-500 mb-2 line-clamp-2">{business.description}</p>
-
-        <div className="flex items-center justify-between mb-3">
-          <StarRating rating={business.rating} count={business.review_count} />
-          {dist !== null && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
-              <MapPin size={11} />
-              {formatDistance(dist)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => navigate(`/estabelecimento/${business.slug}`)}
-            className="flex-1 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#14532d' }}
-          >
-            Ver detalhes
-          </button>
-          {business.whatsapp && (
-            <button
-              onClick={() => openWhatsApp(business.whatsapp, business.name)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white bg-green-500"
-            >
-              <MessageCircle size={15} />
-              WhatsApp
-            </button>
-          )}
-        </div>
+function Texto({ b, dist, formatDistance }) {
+  const plano = planoAtivo(b)
+  return (
+    <div className="min-w-0 flex-1">
+      <h3 className="line-clamp-2 text-[19px] font-extrabold leading-tight tracking-[-0.02em]">{b.name}</h3>
+      <p className="mt-0.5 text-[14px] text-[var(--leve)]">
+        {nomeSub(b)}{b.city && b.city !== 'Monte Verde' ? ` · ${b.city}` : ''}
+        {dist !== null && <span className="ml-1 inline-flex items-center gap-0.5"><MapPin size={12} />{formatDistance(dist)}</span>}
+      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <StatusPill st={b.st} />
+        {plano !== 'free' && <ParceiroBadge plano={plano} />}
       </div>
     </div>
+  )
+}
+
+export function BusinessCard({ business: b, compacto = false, index = 0 }) {
+  const navigate = useNavigate()
+  const { isFavoriteBusiness, toggleBusiness } = useFavorites()
+  const { getDistance, formatDistance, location } = useGeolocation()
+  const isFav = isFavoriteBusiness(b.id)
+  const dist = location && b.latitude ? getDistance(b.latitude, b.longitude) : null
+  const abrir = () => navigate(`/estabelecimento/${b.slug}`)
+
+  return (
+    <article className="entra overflow-hidden rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': Math.min(index, 10) }}>
+      {b.images?.[0] ? (
+        <button onClick={abrir} className="pressiona block w-full text-left" aria-label={`Ver ${b.name}`}>
+          <Capa b={b} alto={compacto ? 'h-32' : 'h-48'} />
+          <div className="px-4 pt-3.5"><Texto b={b} dist={dist} formatDistance={formatDistance} /></div>
+        </button>
+      ) : (
+        <button onClick={abrir} className="pressiona flex w-full items-start gap-3.5 px-4 pt-4 text-left" aria-label={`Ver ${b.name}`}>
+          <Selo b={b} />
+          <Texto b={b} dist={dist} formatDistance={formatDistance} />
+        </button>
+      )}
+
+      {compacto ? <div className="h-4" /> : (
+        <div className="flex gap-2 px-4 pb-4 pt-3.5">
+          {b.whatsapp ? (
+            <a href={linkWhatsApp(b.whatsapp)} target="_blank" rel="noopener noreferrer" onClick={() => registrar('whatsapp', { businessId: b.id })} className="botao botao-wa h-11 min-h-0 flex-1">
+              <MessageCircle size={17} />WhatsApp
+            </a>
+          ) : b.phone ? (
+            <a href={linkTel(b.phone)} onClick={() => registrar('tel', { businessId: b.id })} className="botao botao-pri h-11 min-h-0 flex-1"><Phone size={17} />Ligar</a>
+          ) : (
+            <button onClick={abrir} className="botao botao-sec h-11 min-h-0 flex-1">Ver detalhes</button>
+          )}
+          <button onClick={() => toggleBusiness(b.id)} className="botao botao-sec h-11 min-h-0 w-11 px-0" aria-label={isFav ? 'Remover dos salvos' : 'Salvar'} aria-pressed={isFav}>
+            <Heart size={18} className={`coracao ${isFav ? 'ativo' : ''}`} />
+          </button>
+        </div>
+      )}
+    </article>
   )
 }

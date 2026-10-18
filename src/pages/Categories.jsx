@@ -1,66 +1,52 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronDown, ArrowRight } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
+import { Icon } from '../components/UI/Icon'
 import { CATEGORIES } from '../data/categories'
+import { FOTO_CATEGORIA } from '../data/fotos'
+import { useBusinesses } from '../hooks/useBusinesses'
+
+const ORDEM = ['alimentacao', 'hospedagem', 'turismo', 'compras', 'saude', 'transporte', 'servicos', 'construcao', 'imobiliarias']
 
 export function Categories() {
-  const navigate = useNavigate()
-  const [expanded, setExpanded] = useState(null)
+  const [aberta, setAberta] = useState(null)
+  const { businesses } = useBusinesses()
+  const conta = (cat, sub) => businesses.filter(b => b.category === cat && (!sub || b.subcategory === sub)).length
+  const cats = ORDEM.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean)
 
   return (
-    <Layout title="Categorias" showSearch>
-      <div className="px-4 pt-4 pb-4">
-        <div className="space-y-3">
-          {CATEGORIES.map(cat => (
-            <div key={cat.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-              <button
-                className="w-full flex items-center gap-4 p-4"
-                onClick={() => setExpanded(expanded === cat.id ? null : cat.id)}
-              >
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-                  style={{ background: cat.bg }}
-                >
-                  {cat.icon}
+    <Layout title="Explorar" subtitle="Tudo o que tem na vila" showSearch>
+      <div className="space-y-3 px-5 pt-2">
+        {cats.map((c, i) => {
+          const on = aberta === c.id
+          const f = FOTO_CATEGORIA[c.id]
+          return (
+            <div key={c.id} className="entra overflow-hidden rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': i }}>
+              <button className="pressiona relative block w-full text-left" onClick={() => setAberta(on ? null : c.id)} aria-expanded={on}>
+                <img src={f.p} alt="" loading={i < 3 ? 'eager' : 'lazy'} className="aspect-[16/7] w-full object-cover" />
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[22px] font-extrabold leading-tight tracking-[-0.02em]">{c.name} <span className="num text-[15px] font-bold text-[var(--leve)]">{conta(c.id) || ''}</span></span>
+                    <span className="block truncate text-[15px] text-[var(--leve)]">{c.description}</span>
+                  </span>
+                  <ChevronDown size={20} className="shrink-0 text-[var(--leve)] transition-transform duration-200" style={{ transform: on ? 'rotate(180deg)' : 'none' }} />
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="font-semibold text-gray-900">{cat.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{cat.description}</p>
-                </div>
-                <ChevronRight
-                  size={18}
-                  className="text-gray-400 transition-transform"
-                  style={{ transform: expanded === cat.id ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                />
               </button>
-
-              {expanded === cat.id && (
-                <div className="border-t border-gray-50 px-4 pb-3">
-                  <button
-                    onClick={() => navigate(`/categoria/${cat.slug}`)}
-                    className="w-full flex items-center justify-between py-2.5 border-b border-gray-50"
-                  >
-                    <span className="text-sm font-semibold text-gray-800">Ver todos em {cat.name}</span>
-                    <ChevronRight size={14} className="text-gray-400" />
-                  </button>
-                  <div className="grid grid-cols-2 gap-0">
-                    {cat.subcategories.map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={() => navigate(`/categoria/${cat.slug}/${sub.slug}`)}
-                        className="flex items-center gap-2.5 py-2.5 pr-2"
-                      >
-                        <span className="text-base">{sub.icon}</span>
-                        <span className="text-sm text-gray-700">{sub.name}</span>
-                      </button>
-                    ))}
-                  </div>
+              <div className={`abre ${on ? 'aberto' : ''}`}><div>
+                <div className="px-4 pb-3">
+                  <Link to={`/categoria/${c.slug}`} className="botao botao-pri h-11 min-h-0 w-full">Ver todos <ArrowRight size={17} /></Link>
+                  {c.subcategories.filter(s => conta(c.id, s.id)).map(s => (
+                    <Link key={s.id} to={`/categoria/${c.slug}/${s.slug}`} className="flex items-center gap-3 py-3 text-[16px] font-semibold">
+                      <Icon name={s.icon} size={19} className="text-[var(--musgo)]" /><span className="flex-1">{s.name}</span>
+                      <span className="num text-[14px] text-[var(--leve)]">{conta(c.id, s.id)}</span>
+                    </Link>
+                  ))}
                 </div>
-              )}
+              </div></div>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </Layout>
   )

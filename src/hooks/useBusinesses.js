@@ -1,116 +1,101 @@
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
-import { MOCK_BUSINESSES } from '../data/mockData'
+import { useState, useEffect, useMemo, useSyncExternalStore } from 'react'
+import { supabase, BUSINESS_COLS } from '../lib/supabase'
+import { statusHorario, pesoEstado } from '../lib/horario'
+import { buscar } from '../lib/busca'
 
-function isOpenNow(hours) {
-  if (!hours) return null
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-  const now = new Date()
-  const dayName = days[now.getDay()]
-  const todayHours = hours[dayName]
-  if (!todayHours || todayHours.closed) return false
-  if (todayHours.open === '00:00' && todayHours.close === '23:59') return true
-  const [openH, openM] = todayHours.open.split(':').map(Number)
-  const [closeH, closeM] = todayHours.close.split(':').map(Number)
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const openMinutes = openH * 60 + openM
-  const closeMinutes = closeH * 60 + closeM
-  return currentMinutes >= openMinutes && currentMinutes <= closeMinutes
+// A base inteira tem poucas centenas de lugares: carrega uma vez e filtra no celular.
+// Assim a busca é instantânea e funciona mesmo com sinal fraco depois do primeiro acesso.
+const CACHE_KEY = 'mv_lugares_v2'
+let estado = { lista: lerCache(), carregando: true, erro: null }
+const ouvintes = new Set()
+let pedido = null
+
+function lerCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')?.lista || [] } catch { return [] }
 }
 
-export function useBusinesses({ category, subcategory, search, openNow, sortBy } = {}) {
-  const [businesses, setBusinesses] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function publicar(novo) {
+  estado = { ...estado, ...novo }
+  ouvintes.forEach(fn => fn())
+}
 
-  const fetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      let query = supabase
-        .from('businesses')
-        .select('*, business_images(image_url, display_order)')
-        .eq('status', 'active')
-
-      if (category) query = query.eq('category', category)
-      if (subcategory) query = query.eq('subcategory', subcategory)
-      if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,description.ilike.%${search}%,subcategory.ilike.%${search}%,tags.cs.{${search}}`
-        )
-      }
-
-      const { data, error: dbError } = await query.order('featured', { ascending: false }).order('rating', { ascending: false })
-
-      if (dbError) throw dbError
-
-      let results = (data || []).map(b => ({
+export function carregarLugares(forcar = false) {
+  if (pedido && !forcar) return pedido
+  pedido = supabase
+    .from('businesses')
+    .select(`${BUSINESS_COLS}, business_images(image_url, display_order)`)
+    .eq('status', 'active')
+    .order('name')
+    .then(({ data, error }) => {
+      if (error) throw error
+      const lista = (data || []).map(b => ({
         ...b,
-        images: b.business_images?.sort((a, z) => a.display_order - z.display_order).map(i => i.image_url) || [],
-        isOpen: isOpenNow(b.hours),
+        images: (b.business_images || []).sort((a, z) => a.display_order - z.display_order).map(i => i.image_url),
       }))
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ em: Date.now(), lista })) } catch { /* cheio */ }
+      publicar({ lista, carregando: false, erro: null })
+    })
+    .catch(err => publicar({ carregando: false, erro: err?.message || 'Sem conexão' }))
+  return pedido
+}
 
-      if (openNow) results = results.filter(b => b.isOpen === true)
+function useLugares() {
+  const snap = useSyncExternalStore(
+    fn => { ouvintes.add(fn); return () => ouvintes.delete(fn) },
+    () => estado,
+  )
+  useEffect(() => { carregarLugares() }, [])
+  return snap
+}
 
-      setBusinesses(results)
-    } catch {
-      // Fall back to mock data if Supabase is not seeded yet
-      let results = MOCK_BUSINESSES.map(b => ({ ...b, isOpen: isOpenNow(b.hours) }))
-      if (category) results = results.filter(b => b.category === category)
-      if (subcategory) results = results.filter(b => b.subcategory === subcategory)
-      if (search) {
-        const q = search.toLowerCase()
-        results = results.filter(b =>
-          b.name.toLowerCase().includes(q) ||
-          b.description.toLowerCase().includes(q) ||
-          b.subcategory.toLowerCase().includes(q) ||
-          b.tags?.some(t => t.toLowerCase().includes(q))
-        )
-      }
-      if (openNow) results = results.filter(b => b.isOpen === true)
-      setBusinesses(results)
-    } finally {
-      setLoading(false)
+/** Recalcula "aberto agora" a cada minuto. */
+export function useRelogio() {
+  const [t, setT] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setT(Date.now()), 60_000)
+    return () => clearInterval(id)
+  }, [])
+  return t
+}
+
+const PLANO = { premium: 0, destaque: 1, free: 2 }
+const planoVale = b => (b.plan_expires_at && new Date(b.plan_expires_at) <= new Date() ? 'free' : b.plan)
+
+export function ordenar(lista) {
+  return [...lista].sort((a, b) =>
+    (planoVale(a) === 'premium' ? 0 : 1) - (planoVale(b) === 'premium' ? 0 : 1) ||
+    pesoEstado(a.st) - pesoEstado(b.st) ||
+    (PLANO[planoVale(a)] ?? 2) - (PLANO[planoVale(b)] ?? 2) ||
+    a.name.localeCompare(b.name, 'pt-BR'))
+}
+
+export function useBusinesses({ category, subcategory, search, openNow, group } = {}) {
+  const { lista, carregando, erro } = useLugares()
+  const tick = useRelogio()
+
+  const businesses = useMemo(() => {
+    let r = lista.map(b => {
+      const st = statusHorario(b)
+      return { ...b, st, isOpen: st.estado === 'aberto' ? true : st.estado === 'fechado' ? false : null }
+    })
+    if (group) r = r.filter(b => b.urgency_group === group)
+    if (category) r = r.filter(b => b.category === category)
+    if (subcategory) r = r.filter(b => b.subcategory === subcategory)
+    if (search) {
+      r = buscar(r, search).sort((a, b) => b.score - a.score || pesoEstado(a.st) - pesoEstado(b.st) || a.name.localeCompare(b.name, 'pt-BR'))
+    } else {
+      r = ordenar(r)
     }
-  }, [category, subcategory, search, openNow, sortBy])
+    if (openNow) r = r.filter(b => b.st.estado === 'aberto')
+    return r
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lista, category, subcategory, search, openNow, group, tick])
 
-  useEffect(() => { fetch() }, [fetch])
-
-  return { businesses, loading, error, refetch: fetch }
+  return { businesses, loading: carregando && !lista.length, error: lista.length ? null : erro, refetch: () => carregarLugares(true) }
 }
 
 export function useBusinessBySlug(slug) {
-  const [business, setBusiness] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!slug) return
-    const load = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from('businesses')
-          .select('*, business_images(image_url, display_order)')
-          .eq('slug', slug)
-          .eq('status', 'active')
-          .single()
-
-        if (error) throw error
-        const b = {
-          ...data,
-          images: data.business_images?.sort((a, z) => a.display_order - z.display_order).map(i => i.image_url) || [],
-          isOpen: isOpenNow(data.hours),
-        }
-        setBusiness(b)
-      } catch {
-        const b = MOCK_BUSINESSES.find(b => b.slug === slug)
-        if (b) setBusiness({ ...b, isOpen: isOpenNow(b.hours) })
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [slug])
-
-  return { business, loading }
+  const { businesses, loading } = useBusinesses()
+  const business = businesses.find(b => b.slug === slug) || null
+  return { business, loading: loading && !business }
 }

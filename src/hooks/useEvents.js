@@ -1,86 +1,63 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { MOCK_EVENTS } from '../data/mockData'
 
 function parseDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 
+function iso(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function janela(filter) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+  const mais = n => { const d = new Date(hoje); d.setDate(hoje.getDate() + n); return d }
+  if (filter === 'today') return [hoje, hoje]
+  if (filter === 'tomorrow') return [mais(1), mais(1)]
+  if (filter === 'weekend') {
+    const dow = hoje.getDay() // 0 dom ... 6 sáb
+    const sab = dow === 0 ? mais(-1) : mais(6 - dow)
+    const dom = new Date(sab); dom.setDate(sab.getDate() + 1)
+    return [dow === 0 ? hoje : sab, dom]
+  }
+  if (filter === '7days') return [hoje, mais(7)]
+  if (filter === '30days') return [hoje, mais(30)]
+  return [hoje, null]
+}
+
+const ajusta = e => ({ ...e, image: e.image_url || '', website: e.link || '' })
+
 export function useEvents({ filter, category } = {}) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetch = useCallback(async () => {
-    setLoading(true)
-    try {
-      let query = supabase.from('events').select('*').eq('active', true).order('date_start')
-      if (category) query = query.eq('category', category)
-
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      if (filter === 'today') {
-        const end = today.toISOString().slice(0, 10)
-        query = query.gte('date_start', end).lte('date_start', end)
-      } else if (filter === 'tomorrow') {
-        const tom = new Date(today)
-        tom.setDate(today.getDate() + 1)
-        const d = tom.toISOString().slice(0, 10)
-        query = query.gte('date_start', d).lte('date_start', d)
-      } else if (filter === 'weekend') {
-        const day = today.getDay()
-        const diff = day <= 5 ? 5 - day : 0
-        const sat = new Date(today); sat.setDate(today.getDate() + diff)
-        const sun = new Date(sat); sun.setDate(sat.getDate() + 1)
-        query = query.gte('date_start', sat.toISOString().slice(0, 10)).lte('date_start', sun.toISOString().slice(0, 10))
-      } else if (filter === '7days') {
-        const end = new Date(today); end.setDate(today.getDate() + 7)
-        query = query.gte('date_start', today.toISOString().slice(0, 10)).lte('date_start', end.toISOString().slice(0, 10))
-      } else if (filter === '30days') {
-        const end = new Date(today); end.setDate(today.getDate() + 30)
-        query = query.gte('date_start', today.toISOString().slice(0, 10)).lte('date_start', end.toISOString().slice(0, 10))
-      } else {
-        query = query.gte('date_start', today.toISOString().slice(0, 10))
-      }
-
-      const { data, error } = await query
-      if (error) throw error
-      setEvents(data || [])
-    } catch {
-      let results = MOCK_EVENTS.filter(e => e.active)
-      const today = new Date(); today.setHours(0, 0, 0, 0)
-
-      if (filter === 'today') {
-        results = results.filter(e => parseDate(e.date_start).getTime() === today.getTime())
-      } else if (filter === 'tomorrow') {
-        const tom = new Date(today); tom.setDate(today.getDate() + 1)
-        results = results.filter(e => parseDate(e.date_start).getTime() === tom.getTime())
-      } else if (filter === 'weekend') {
-        const day = today.getDay()
-        const diff = day <= 5 ? 5 - day : 0
-        const sat = new Date(today); sat.setDate(today.getDate() + diff)
-        const sun = new Date(sat); sun.setDate(sat.getDate() + 1)
-        results = results.filter(e => {
-          const d = parseDate(e.date_start)
-          return d >= sat && d <= sun
-        })
-      } else if (filter === '7days') {
-        const end = new Date(today); end.setDate(today.getDate() + 7)
-        results = results.filter(e => parseDate(e.date_start) >= today && parseDate(e.date_start) <= end)
-      } else if (filter === '30days') {
-        const end = new Date(today); end.setDate(today.getDate() + 30)
-        results = results.filter(e => parseDate(e.date_start) >= today && parseDate(e.date_start) <= end)
-      }
-
-      if (category) results = results.filter(e => e.category === category)
-      setEvents(results)
-    } finally {
-      setLoading(false)
-    }
+  useEffect(() => {
+    let vivo = true
+    const [ini, fim] = janela(filter)
+    let q = supabase.from('events').select('*').eq('active', true).gte('date_start', iso(ini)).order('date_start')
+    if (fim) q = q.lte('date_start', iso(fim))
+    if (category) q = q.eq('category', category)
+    q.then(({ data }) => { if (vivo) setEvents((data || []).map(ajusta)) })
+      .catch(() => { if (vivo) setEvents([]) })
+      .finally(() => { if (vivo) setLoading(false) })
+    return () => { vivo = false }
   }, [filter, category])
-
-  useEffect(() => { fetch() }, [fetch])
 
   return { events, loading }
 }
+
+export function useEvent(id) {
+  const [event, setEvent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    if (!id) return
+    supabase.from('events').select('*').eq('id', id).maybeSingle()
+      .then(({ data }) => setEvent(data ? ajusta(data) : null))
+      .catch(() => setEvent(null))
+      .finally(() => setLoading(false))
+  }, [id])
+  return { event, loading }
+}
+
+export { parseDate }

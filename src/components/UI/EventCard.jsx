@@ -21,15 +21,15 @@ export function EventCard({ event }) {
 
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer"
+      className="bg-white rounded-[var(--raio)] overflow-hidden shadow-sm cursor-pointer"
       onClick={() => navigate(`/evento/${event.id}`)}
     >
       <div className="relative">
         {event.image ? (
           <img src={event.image} alt={event.title} className="w-full h-44 object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-44 bg-gradient-to-br from-green-900 to-emerald-600 flex items-center justify-center text-5xl">
-            🎉
+          <div className="w-full h-44 bg-gradient-to-br from-green-900 to-emerald-700 flex items-center justify-center">
+            <Calendar size={44} strokeWidth={1.4} className="text-white/40" />
           </div>
         )}
         <button

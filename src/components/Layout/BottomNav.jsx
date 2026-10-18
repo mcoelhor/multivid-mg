@@ -1,51 +1,45 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Home, LayoutGrid, Map, Calendar, MoreHorizontal } from 'lucide-react'
+import { Home, Compass, Route, Map, Heart } from 'lucide-react'
 
 const TABS = [
   { path: '/', icon: Home, label: 'Início' },
-  { path: '/categorias', icon: LayoutGrid, label: 'Categorias' },
+  { path: '/categorias', icon: Compass, label: 'Explorar' },
+  { path: '/roteiro', icon: Route, label: 'Roteiro', meio: true },
   { path: '/mapa', icon: Map, label: 'Mapa' },
-  { path: '/eventos', icon: Calendar, label: 'Eventos' },
-  { path: '/mais', icon: MoreHorizontal, label: 'Mais' },
+  { path: '/favoritos', icon: Heart, label: 'Salvos' },
 ]
 
+/** Barra de baixo: faixa escura, sem vidro e sem sombra; o roteiro no meio. */
 export function BottomNav() {
   const navigate = useNavigate()
-  const location = useLocation()
-
-  const isActive = (path) => {
-    if (path === '/') return location.pathname === '/'
-    return location.pathname.startsWith(path)
-  }
+  const { pathname } = useLocation()
+  const ativo = p => (p === '/' ? pathname === '/' : pathname.startsWith(p))
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-100 z-50"
+      className="fixed bottom-0 z-50 w-full max-w-[480px] bg-[var(--araucaria)] min-[900px]:left-[max(6vw,calc(50vw-560px))] max-[899px]:left-1/2 max-[899px]:-translate-x-1/2"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Navegação principal"
     >
-      <div className="flex items-center justify-around h-16">
-        {TABS.map(({ path, icon: Icon, label }) => {
-          const active = isActive(path)
+      <div className="flex h-[68px] items-stretch px-2">
+        {TABS.map(({ path, icon: Icon, label, meio }) => {
+          const on = ativo(path)
           return (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className="flex flex-col items-center gap-0.5 flex-1 py-2 transition-colors"
+              aria-current={on ? 'page' : undefined}
+              className="pressiona relative flex flex-1 flex-col items-center justify-center gap-1"
             >
-              <Icon
-                size={22}
-                strokeWidth={active ? 2.5 : 1.8}
-                style={{ color: active ? '#14532d' : '#9CA3AF' }}
-              />
-              <span
-                className="text-[10px] font-medium"
-                style={{ color: active ? '#14532d' : '#9CA3AF' }}
-              >
-                {label}
-              </span>
-              {active && (
-                <span className="w-1 h-1 rounded-full absolute bottom-2" style={{ background: '#14532d' }} />
+              {meio ? (
+                <span className={`flex h-10 w-14 items-center justify-center rounded-full transition-colors duration-200 ${on ? 'bg-[var(--broto)] text-[var(--araucaria)]' : 'bg-[var(--musgo)] text-white'}`}>
+                  <Icon size={21} strokeWidth={2.2} />
+                </span>
+              ) : (
+                <Icon size={22} strokeWidth={on ? 2.3 : 1.7} className={`transition-colors duration-200 ${on ? 'text-white' : 'text-white/55'}`} />
               )}
+              <span className={`text-[12px] font-bold transition-colors duration-200 ${on ? 'text-white' : 'text-white/55'}`}>{label}</span>
+              {!meio && <span className={`absolute top-1.5 h-1 w-1 rounded-full bg-[var(--broto)] transition-opacity duration-200 ${on ? 'opacity-100' : 'opacity-0'}`} />}
             </button>
           )
         })}
