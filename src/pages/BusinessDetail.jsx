@@ -4,7 +4,7 @@ import { Phone, MessageCircle, Navigation, Share2, Heart, MapPin, Globe, Clock, 
 import { useBusinessBySlug, useBusinesses } from '../hooks/useBusinesses'
 import { useFavorites } from '../hooks/useFavorites'
 import { Capa, BusinessCard, planoAtivo } from '../components/UI/BusinessCard'
-import { StatusPill, ParceiroBadge } from '../components/UI/Badge'
+import { StatusPill, ParceiroBadge, VerificadoBadge } from '../components/UI/Badge'
 import { InstagramIcon } from '../components/UI/Icon'
 import { BottomNav } from '../components/Layout/BottomNav'
 import { Rodape } from '../components/Layout/Rodape'
@@ -93,6 +93,7 @@ export function BusinessDetail() {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusPill st={b.st} longo />
             {planoAtivo(b) !== 'free' && <ParceiroBadge plano={planoAtivo(b)} />}
+            {b.verified_at && <VerificadoBadge />}
           </div>
           {b.description && <p className="mt-3 text-[17px] leading-relaxed">{b.description}</p>}
         </div>

@@ -32,6 +32,7 @@ export function More() {
         <Linha icon={Calendar} label="Eventos" onClick={() => navigate('/eventos')} />
         <Linha icon={Siren} label="Emergência e contatos úteis" onClick={() => navigate('/sos')} />
         <Linha icon={Store} label="Anuncie seu negócio" onClick={() => navigate('/anuncie')} />
+        <Linha icon={Store} label="Meu negócio (área do responsável)" onClick={() => navigate('/meu-negocio')} />
         <Linha icon={Image} label="Créditos das fotos" onClick={() => navigate('/creditos')} />
         <Linha icon={Settings} label="Área do administrador" onClick={() => navigate('/admin')} />
       </div>

@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Building2, Calendar, Inbox, Search, ArrowLeft, LogOut, Wallet } from 'lucide-react'
+import { LayoutDashboard, Building2, Calendar, Inbox, Search, ArrowLeft, LogOut, Wallet, BadgeCheck } from 'lucide-react'
 import { sair } from './useAdmin'
 
 const NAV = [
   { path: '/admin', icon: LayoutDashboard, label: 'Painel', exact: true },
   { path: '/admin/pagamentos', icon: Wallet, label: 'Pagamentos' },
+  { path: '/admin/donos', icon: BadgeCheck, label: 'Donos' },
   { path: '/admin/leads', icon: Inbox, label: 'Leads' },
   { path: '/admin/buscas', icon: Search, label: 'Buscas' },
   { path: '/admin/empresas', icon: Building2, label: 'Lugares' },
