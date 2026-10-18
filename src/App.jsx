@@ -20,6 +20,8 @@ const AdminLeads = lazy(() => import('./admin/AdminLeads').then(m => ({ default:
 const AdminBuscas = lazy(() => import('./admin/AdminBuscas').then(m => ({ default: m.AdminBuscas })))
 const AdminBusinesses = lazy(() => import('./admin/AdminBusinesses').then(m => ({ default: m.AdminBusinesses })))
 const AdminPagamentos = lazy(() => import('./admin/AdminPagamentos').then(m => ({ default: m.AdminPagamentos })))
+const AdminReivindicacoes = lazy(() => import('./admin/AdminReivindicacoes').then(m => ({ default: m.AdminReivindicacoes })))
+const MeuNegocio = lazy(() => import('./pages/MeuNegocio').then(m => ({ default: m.MeuNegocio })))
 const AdminEvents = lazy(() => import('./admin/AdminEvents').then(m => ({ default: m.AdminEvents })))
 import { useAdmin } from './admin/useAdmin'
 import { registrarVisita } from './lib/track'
@@ -82,6 +84,8 @@ export default function App() {
         <Route path="/creditos" element={<Creditos />} />
         <Route path="/uteis" element={<Uteis />} />
         <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+        <Route path="/admin/donos" element={<AdminGuard><AdminReivindicacoes /></AdminGuard>} />
+        <Route path="/meu-negocio" element={<MeuNegocio />} />
         <Route path="/admin/pagamentos" element={<AdminGuard><AdminPagamentos /></AdminGuard>} />
         <Route path="/admin/leads" element={<AdminGuard><AdminLeads /></AdminGuard>} />
         <Route path="/admin/buscas" element={<AdminGuard><AdminBuscas /></AdminGuard>} />

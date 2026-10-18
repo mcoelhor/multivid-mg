@@ -5,7 +5,7 @@ import { buscar } from '../lib/busca'
 
 // A base inteira tem poucas centenas de lugares: carrega uma vez e filtra no celular.
 // Assim a busca é instantânea e funciona mesmo com sinal fraco depois do primeiro acesso.
-const CACHE_KEY = 'mv_lugares_v2'
+const CACHE_KEY = 'mv_lugares_v3'
 let estado = { lista: lerCache(), carregando: true, erro: null }
 const ouvintes = new Set()
 let pedido = null

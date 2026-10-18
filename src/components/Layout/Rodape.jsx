@@ -3,6 +3,7 @@ import { Siren, ArrowRight } from 'lucide-react'
 
 const LINKS = [
   ['Anuncie seu negócio', '/anuncie'],
+  ['Meu negócio', '/meu-negocio'],
   ['Eventos', '/eventos'],
   ['Todas as categorias', '/categorias'],
   ['Corrigir uma informação', '/mais#corrigir'],

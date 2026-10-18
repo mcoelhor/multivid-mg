@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Heart, MapPin, MessageCircle, Phone } from 'lucide-react'
 import { Icon } from './Icon'
-import { StatusPill, ParceiroBadge } from './Badge'
+import { StatusPill, ParceiroBadge, VerificadoBadge } from './Badge'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { iconeDe, nomeSub, categoria } from '../../data/categories'
@@ -44,6 +44,7 @@ function Texto({ b, dist, formatDistance }) {
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <StatusPill st={b.st} />
         {plano !== 'free' && <ParceiroBadge plano={plano} />}
+        {b.verified_at && <VerificadoBadge />}
       </div>
     </div>
   )
