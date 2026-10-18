@@ -17,6 +17,7 @@ import { Avisos } from '../components/Avisos'
 import { BotaoVoz } from '../components/BotaoVoz'
 import { CartaoOferta } from '../components/Oferta'
 import { useInstalar } from '../hooks/useInstalar'
+import { epocasDoMes, NOME_MES } from '../data/epoca'
 import { registrar } from '../lib/track'
 
 const POSTER = [FOTOS.marDeNuvens, FOTOS.porDoSol, FOTOS.enxaimel, FOTOS.serra, FOTOS.ruaAraucaria]
@@ -188,6 +189,27 @@ function Agora() {
   )
 }
 
+/** O que está na época neste mês: uma linha com foto, leva à página completa. */
+function NaEpoca() {
+  const mes = new Date().getMonth()
+  const lista = epocasDoMes(mes)
+  if (!lista.length) return null
+  const e = lista[0]
+  return (
+    <section className="mt-16 px-5" aria-labelledby="h-epoca">
+      <h2 id="h-epoca" className="titulo revela">Na época: {e.nome.toLowerCase()}</h2>
+      <Link to="/epoca" className="revela pressiona mt-5 flex items-center gap-4 rounded-[var(--raio)] bg-[var(--papel)] p-2.5 pr-4" style={{ '--i': 1 }}>
+        <img src={e.foto.p} alt={e.foto.legenda} loading="lazy" className="h-[88px] w-[88px] shrink-0 rounded-[14px] object-cover" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] leading-snug">{e.resumo}</span>
+          <span className="mt-1 block text-[14px] font-bold text-[var(--musgo)]">O que {NOME_MES[mes]} tem de melhor{lista.length > 1 ? ` (+${lista.length - 1})` : ''}</span>
+        </span>
+        <ArrowRight size={19} className="shrink-0 text-[var(--musgo)]" />
+      </Link>
+    </section>
+  )
+}
+
 /** Ofertas dos lugares verificados, quando existem. */
 function Ofertas() {
   const { ofertas } = useOfertas()
@@ -320,7 +342,10 @@ function Explorar() {
           </Link>
         </li>
       </ul>
-      <Link to="/categorias" className="mt-3 inline-flex min-h-12 items-center gap-2 text-[16px] font-bold text-[var(--musgo)]">Todas as categorias <ArrowRight size={17} /></Link>
+      <div className="mt-3 flex flex-wrap gap-x-6">
+        <Link to="/categorias" className="inline-flex min-h-12 items-center gap-2 text-[16px] font-bold text-[var(--musgo)]">Todas as categorias <ArrowRight size={17} /></Link>
+        <Link to="/como-chegar" className="inline-flex min-h-12 items-center gap-2 text-[16px] font-bold text-[var(--musgo)]">Como chegar <ArrowRight size={17} /></Link>
+      </div>
     </section>
   )
 }
@@ -353,6 +378,7 @@ export function Home() {
       <Momentos />
       <Ofertas />
       <Explorar />
+      <NaEpoca />
       <ConviteRoteiro />
       <Historia />
       <SoAqui />

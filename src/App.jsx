@@ -13,6 +13,11 @@ import { Roteiro } from './pages/Roteiro'
 import { Creditos } from './pages/Creditos'
 import { Uteis } from './pages/Uteis'
 import { Ofertas } from './pages/Ofertas'
+import { ComoChegar } from './pages/ComoChegar'
+import { Epoca } from './pages/Epoca'
+import { Privacidade } from './pages/Privacidade'
+import { Cookies } from './components/Cookies'
+import { pagina } from './lib/marketing'
 import { NaoEncontrada } from './pages/NaoEncontrada'
 import { AdminLogin } from './admin/AdminLogin'
 const MapPage = lazy(() => import('./pages/MapPage').then(m => ({ default: m.MapPage })))
@@ -48,6 +53,7 @@ function Rolagem() {
     window.addEventListener('scroll', guarda, { passive: true })
     return () => window.removeEventListener('scroll', guarda)
   }, [key, pathname, search])
+  useEffect(() => { pagina(pathname + search) }, [pathname, search])
   useEffect(() => {
     if (hash) return
     if (tipo === 'POP' && POSICOES.has(key)) {
@@ -86,6 +92,9 @@ export default function App() {
         <Route path="/creditos" element={<Creditos />} />
         <Route path="/uteis" element={<Uteis />} />
         <Route path="/ofertas" element={<Ofertas />} />
+        <Route path="/como-chegar" element={<ComoChegar />} />
+        <Route path="/epoca" element={<Epoca />} />
+        <Route path="/privacidade" element={<Privacidade />} />
         <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
         <Route path="/admin/avisos" element={<AdminGuard><AdminAvisos /></AdminGuard>} />
         <Route path="/admin/donos" element={<AdminGuard><AdminReivindicacoes /></AdminGuard>} />
@@ -98,6 +107,7 @@ export default function App() {
         <Route path="*" element={<NaoEncontrada />} />
       </Routes>
       </Suspense>
+      <Cookies />
     </BrowserRouter>
   )
 }

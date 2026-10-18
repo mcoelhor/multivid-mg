@@ -14,8 +14,8 @@ export const INTERESSES = {
 }
 
 /** Formulário de contato. Grava no banco; o painel avisa quando chega. */
-export function LeadForm({ empresa = 'portal', interesse = '', titulo, botao = 'Enviar', compacto = false }) {
-  const [f, setF] = useState({ name: '', phone: '', email: '', interest: interesse || 'outro', message: '', lgpd: false, site: '' })
+export function LeadForm({ empresa = 'portal', interesse = '', titulo, botao = 'Enviar', compacto = false, inicial = '' }) {
+  const [f, setF] = useState({ name: '', phone: '', email: '', interest: interesse || 'outro', message: inicial, lgpd: false, site: '' })
   const [estado, setEstado] = useState('livre') // livre | enviando | ok | erro
   const [aviso, setAviso] = useState('')
   const [t0] = useState(() => Date.now())

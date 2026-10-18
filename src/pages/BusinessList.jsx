@@ -12,6 +12,7 @@ import { FOTO_CATEGORIA } from '../data/fotos'
 import { SITUACOES, ehObra, ehUrgente, situacaoDoTermo, subsDoTermo } from '../lib/busca'
 import { registrar } from '../lib/track'
 import { BotaoVoz } from '../components/BotaoVoz'
+import { FILTROS, nomeComodidade, iconeComodidade } from '../data/comodidades'
 
 const URGENTES = ['farmacias', 'pronto-socorro', 'hospitais', 'dentistas', 'clinicas', 'oficinas', 'borracharias', 'postos', 'taxis', 'veterinarios', 'utilidade-publica']
 const SUGESTOES = ['fondue', 'café colonial', 'trilha', 'pizza', 'chocolate', 'cervejaria', 'farmácia', 'aventura']
@@ -28,6 +29,7 @@ export function BusinessList() {
   const q = params.get('q') || ''
   const sub = subcategory || params.get('sub') || null
   const openNow = params.get('aberto') === '1'
+  const com = params.get('com') || null
   const situacao = situacaoDoTermo(q) || SITUACOES.find(s => s.id === q)
   const mudar = (chave, valor) => {
     const p = new URLSearchParams(params)
@@ -39,6 +41,7 @@ export function BusinessList() {
   const lista = todos
     .filter(b => !sub || b.subcategory === sub)
     .filter(b => !openNow || b.st.estado === 'aberto' || b.st.estado === 'plantao')
+    .filter(b => !com || (b.amenities || []).includes(com))
     .filter(b => !(openNow && !q && !category) || b.subcategory !== 'utilidade-publica')
   const curados = q ? lista.filter(b => b.curado) : []
   const restantes = q ? lista.filter(b => !b.curado) : lista
@@ -96,9 +99,12 @@ export function BusinessList() {
       )}
 
       {(cat || q) && todos.length > 0 && (
-        <div className="flex items-center gap-3 px-5 pb-4">
+        <div className="flex items-center gap-3 overflow-x-auto px-5 pb-4 scrollbar-hide">
           <button onClick={() => mudar('aberto', openNow ? null : '1')} aria-pressed={openNow} className="chip"><Clock size={15} />Aberto agora</button>
-          <span className="text-[14px] text-[var(--leve)]">{lista.length} lugares{abertos ? ` · ${abertos} abertos` : ''}</span>
+          {cat && (FILTROS[cat.id] || []).filter(f => todos.some(b => (b.amenities || []).includes(f))).map(f => (
+            <button key={f} onClick={() => mudar('com', com === f ? null : f)} aria-pressed={com === f} className="chip"><Icon name={iconeComodidade(f)} size={15} />{nomeComodidade(f)}</button>
+          ))}
+          <span className="shrink-0 text-[14px] text-[var(--leve)]">{lista.length} lugares{abertos ? ` · ${abertos} abertos` : ''}</span>
         </div>
       )}
 

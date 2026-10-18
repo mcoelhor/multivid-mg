@@ -8,6 +8,8 @@ import { supabase } from '../lib/supabase'
 import { carregarLugares } from '../hooks/useBusinesses'
 import { DIAS, DIAS_NOME, statusHorario } from '../lib/horario'
 import { nomeSub } from '../data/categories'
+import { COMODIDADES } from '../data/comodidades'
+import { Icon } from '../components/UI/Icon'
 
 const campo = 'mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]'
 const FOTOS_URL = 'https://cpoxykaksqlrqnstjonv.supabase.co/storage/v1/object/public/fotos/'
@@ -176,7 +178,7 @@ function Editor({ negocio, onSalvo }) {
   async function salvar() {
     setEstado('salvando')
     const hours = Object.fromEntries(Object.entries(b.hours).filter(([, v]) => String(v).trim()).map(([k, v]) => [k, String(v).trim().toLowerCase()]))
-    const p = { description: b.description, whatsapp: String(b.whatsapp || '').replace(/\D/g, ''), phone: b.phone, phone2: b.phone2, instagram: b.instagram, website: b.website, email: b.email, address: b.address, open_24h: b.open_24h, hours: Object.keys(hours).length ? hours : null }
+    const p = { description: b.description, whatsapp: String(b.whatsapp || '').replace(/\D/g, ''), phone: b.phone, phone2: b.phone2, instagram: b.instagram, website: b.website, email: b.email, address: b.address, open_24h: b.open_24h, hours: Object.keys(hours).length ? hours : null, amenities: b.amenities || [] }
     const { error } = await supabase.rpc('editar_meu_negocio', { p_business: negocio.id, p })
     if (error) { setEstado('erro'); return }
     carregarLugares(true)
@@ -216,6 +218,17 @@ function Editor({ negocio, onSalvo }) {
         <h3 className="text-[18px] font-extrabold tracking-[-0.02em]">Sobre o lugar</h3>
         <label className="mt-2 block text-[15px] font-bold" htmlFor="desc">Descrição <span className="font-medium text-[var(--leve)]">(até 600 caracteres)</span></label>
         <textarea id="desc" rows={4} maxLength={600} value={b.description || ''} onChange={set('description')} placeholder="O que vocês servem ou fazem, o que é especial, se aceita pet, se tem lareira…" className={campo} />
+      </section>
+
+      <section className="mt-6">
+        <h3 className="text-[18px] font-extrabold tracking-[-0.02em]">O que tem no lugar</h3>
+        <p className="mt-1 text-[14px] text-[var(--leve)]">Marque só o que existe de verdade. Vira filtro na busca.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {COMODIDADES.map(([id, nome, ic]) => {
+            const on = (b.amenities || []).includes(id)
+            return <button key={id} type="button" onClick={() => setB(v => ({ ...v, amenities: on ? (v.amenities || []).filter(x => x !== id) : [...(v.amenities || []), id] }))} aria-pressed={on} className="chip"><Icon name={ic} size={15} />{nome}</button>
+          })}
+        </div>
       </section>
 
       <section className="mt-6">
@@ -262,7 +275,7 @@ export function MeuNegocio() {
   const [ativo, setAtivo] = useState(null)
   useEffect(() => {
     if (!user) { setMeus(null); setAtivo(null); return }
-    supabase.from('business_owners').select('business_id, businesses(id,slug,name,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h)').eq('user_id', user.id)
+    supabase.from('business_owners').select('business_id, businesses(id,slug,name,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h,amenities)').eq('user_id', user.id)
       .then(({ data }) => { const l = (data || []).map(x => x.businesses).filter(Boolean); setMeus(l); setAtivo(l[0] || null) })
   }, [user])
 

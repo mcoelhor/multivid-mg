@@ -12,6 +12,9 @@ import { useTitulo } from '../components/Layout/Layout'
 import { Parceiros } from '../components/Parceiros'
 import { CartaoOferta } from '../components/Oferta'
 import { AvisarAbertura } from '../components/Avisar'
+import { Icon } from '../components/UI/Icon'
+import { COMODIDADES } from '../data/comodidades'
+import { evento } from '../lib/marketing'
 import { useOfertas } from '../hooks/useOfertas'
 import { nomeSub } from '../data/categories'
 import { semanaLinhas } from '../lib/horario'
@@ -55,7 +58,7 @@ export function BusinessDetail() {
   const ofertas = b ? porLugar.get(b.id) || [] : []
   useTitulo(b ? `${b.name} · ${nomeSub(b)}` : 'Monte Verde MG')
 
-  useEffect(() => { if (b?.id) registrar('view', { businessId: b.id }) }, [b?.id])
+  useEffect(() => { if (b?.id) { registrar('view', { businessId: b.id }); evento('lugar', { content_name: b.name, content_category: b.category }) } }, [b?.id, b?.name, b?.category])
 
   if (loading) {
     return (
@@ -80,7 +83,9 @@ export function BusinessDetail() {
   const semana = semanaLinhas(b)
   const local = [b.address, b.city, 'MG'].filter(Boolean).join(', ')
   const outros = mesmos.filter(x => x.id !== b.id && x.subcategory === b.subcategory).slice(0, 4)
-  const acao = (kind) => () => registrar(kind, { businessId: b.id })
+  const acao = (kind) => () => { registrar(kind, { businessId: b.id }); if (kind === 'tel' || kind === 'whatsapp') evento('contato', { content_name: b.name }) }
+  const corrigir = campo => `/mais?lugar=${encodeURIComponent(b.slug)}&campo=${campo}#corrigir`
+  const comod = (b.amenities || []).map(id => COMODIDADES.find(c => c[0] === id)).filter(Boolean)
 
   return (
     <main className="flex min-h-dvh flex-col pb-safe">
@@ -103,6 +108,11 @@ export function BusinessDetail() {
             {b.verified_at && <VerificadoBadge />}
           </div>
           {b.description && <p className="mt-3 text-[17px] leading-relaxed">{b.description}</p>}
+          {comod.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Comodidades">
+              {comod.map(([id, nome, ic]) => <li key={id} className="inline-flex items-center gap-1.5 rounded-full bg-[var(--papel)] px-3 py-1.5 text-[13px] font-semibold"><Icon name={ic} size={14} className="text-[var(--musgo)]" />{nome}</li>)}
+            </ul>
+          )}
         </div>
 
         {ofertas.length > 0 && (
@@ -127,6 +137,7 @@ export function BusinessDetail() {
             <div className="flex gap-3 p-4"><Phone size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><p className="num flex flex-wrap items-center gap-x-1 text-[15px]">
               {b.phone && <a href={linkTel(b.phone)} onClick={acao('tel')} className="inline-flex min-h-11 items-center underline decoration-black/20 underline-offset-4">{b.phone}</a>}
               {b.phone2 && <> · <a href={linkTel(b.phone2)} onClick={acao('tel')} className="inline-flex min-h-11 items-center underline decoration-black/20 underline-offset-4">{b.phone2}</a></>}
+              <Link to={corrigir('telefone')} className="ml-auto inline-flex min-h-11 items-center text-[13px] text-[var(--leve)]">corrigir</Link>
             </p></div>
           )}
           <div className="p-4">
@@ -145,6 +156,7 @@ export function BusinessDetail() {
               </ul>
             </div></div>
             {b.open_24h?.startsWith('plant') && <p className="ml-[30px] mt-2 text-[13px] text-[#7a5a08]">Atende plantão 24h por telefone.</p>}
+            {semana.length > 0 && <Link to={corrigir('horario')} className="ml-[30px] mt-1 inline-flex min-h-11 items-center text-[13px] text-[var(--leve)]">Horário mudou? Corrigir</Link>}
           </div>
           {b.instagram && (
             <a href={linkInstagram(b.instagram)} target="_blank" rel="noopener noreferrer" onClick={acao('instagram')} className="flex items-center gap-3 p-4"><InstagramIcon size={18} className="text-[var(--verde)]" /><span className="text-[15px]">@{b.instagram.replace(/^@|.*instagram\.com\//g, '').replace(/\/$/, '')}</span></a>

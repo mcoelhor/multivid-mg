@@ -4,11 +4,15 @@ import { Siren, ArrowRight } from 'lucide-react'
 const LINKS = [
   ['Anuncie seu negócio', '/anuncie'],
   ['Meu negócio', '/meu-negocio'],
+  ['Como chegar', '/como-chegar'],
+  ['Na época', '/epoca'],
+  ['Ofertas', '/ofertas'],
   ['Eventos', '/eventos'],
   ['Todas as categorias', '/categorias'],
   ['Corrigir uma informação', '/mais#corrigir'],
   ['Instalar o app', '/mais'],
   ['Créditos das fotos', '/creditos'],
+  ['Privacidade', '/privacidade'],
 ]
 
 /** Fecho de todas as páginas: emergência discreta, links e o nome em tamanho de pôster. */

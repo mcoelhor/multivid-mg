@@ -2,7 +2,7 @@
    - Navegação: rede primeiro; sem rede, a última versão do app.
    - /assets: cache primeiro (nomes com hash, imutáveis).
    - Lista do guia, ofertas, avisos e fotos: cache enquanto atualiza por trás. */
-const VERSAO = 'mv-sw-v1'
+const VERSAO = 'mv-sw-v2'
 const APP = `${VERSAO}-app`
 const DADOS = `${VERSAO}-dados`
 const SUPA = 'cpoxykaksqlrqnstjonv.supabase.co'
@@ -28,8 +28,20 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(r => r || fetch(req).then(x => { const c = x.clone(); caches.open(APP).then(y => y.put(req, c)); return x })))
     return
   }
-  const dadosDoGuia = u.hostname === SUPA && (u.pathname.startsWith('/storage/v1/object/public/fotos/') || /\/rest\/v1\/(businesses|ofertas|avisos|planos|events)/.test(u.pathname))
-  if (dadosDoGuia || (u.origin === location.origin && /\.(png|svg|webp|json)$/.test(u.pathname))) {
+  // Dados do guia (lista, ofertas, avisos): rede primeiro, para o que mudou aparecer na hora; sem rede, a cópia guardada.
+  if (u.hostname === SUPA && /\/rest\/v1\/(businesses|ofertas|avisos|planos|events)/.test(u.pathname)) {
+    e.respondWith(caches.open(DADOS).then(async c => {
+      try {
+        const r = await fetch(req)
+        if (r.ok) c.put(req, r.clone())
+        return r
+      } catch { return (await c.match(req)) || Response.error() }
+    }))
+    return
+  }
+  // Fotos e ícones: cache primeiro, atualiza por trás
+  const fotos = u.hostname === SUPA && u.pathname.startsWith('/storage/v1/object/public/fotos/')
+  if (fotos || (u.origin === location.origin && /\.(png|svg|webp|json)$/.test(u.pathname))) {
     e.respondWith(caches.open(DADOS).then(async c => {
       const guardado = await c.match(req)
       const rede = fetch(req).then(r => { if (r.ok) c.put(req, r.clone()); return r }).catch(() => guardado)

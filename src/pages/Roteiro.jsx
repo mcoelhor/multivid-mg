@@ -11,6 +11,7 @@ import { agoraMV, DIAS, DIAS_NOME } from '../lib/horario'
 import { linkRota, registrar } from '../lib/track'
 import { COM_QUEM, GOSTOS, RITMOS, SLOTS, candidatos, montarRoteiro, alternativas, motivo, textoCompartilhar, inicioPadrao } from '../lib/roteiro'
 import { AvisarChegada } from '../components/Avisar'
+import { evento } from '../lib/marketing'
 
 const CHAVE = 'mv_roteiro_v1'
 const ler = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) } catch { return null } }
@@ -201,6 +202,7 @@ export function Roteiro() {
     setCompacto(compacta(montarRoteiro(businesses, p)))
     setDiaAtivo(0)
     registrar('busca', { term: `roteiro:${p.dias}d:${p.comQuem}:${p.gostos.join('+')}`, results: 1 })
+    evento('roteiro', { dias: p.dias, com_quem: p.comQuem })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 

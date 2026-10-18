@@ -5,10 +5,11 @@ import { supabase } from '../lib/supabase'
 import { carregarLugares } from '../hooks/useBusinesses'
 import { CATEGORIES } from '../data/categories'
 import { DIAS, DIAS_NOME, statusHorario } from '../lib/horario'
+import { COMODIDADES } from '../data/comodidades'
 import { norm } from '../lib/busca'
 
 const GRUPOS = ['Emergência', 'Comer', 'Ficar', 'Fazer', 'Comprar', 'Serviços', 'Construção', 'Imóveis']
-const VAZIO = { name: '', description: '', category: 'alimentacao', subcategory: 'restaurantes', urgency_group: 'Comer', address: '', city: 'Monte Verde', phone: '', phone2: '', whatsapp: '', instagram: '', website: '', hours: {}, open_24h: '', plan: 'free', featured: false, status: 'active', validation: 'pendente', internal_notes: '' }
+const VAZIO = { name: '', description: '', amenities: [], category: 'alimentacao', subcategory: 'restaurantes', urgency_group: 'Comer', address: '', city: 'Monte Verde', phone: '', phone2: '', whatsapp: '', instagram: '', website: '', hours: {}, open_24h: '', plan: 'free', featured: false, status: 'active', validation: 'pendente', internal_notes: '' }
 const slugify = s => norm(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
 
 function Rot({ t, children, full }) {
@@ -74,6 +75,7 @@ function Editor({ inicial, onClose, onSalvo }) {
         <div className="mt-4 grid grid-cols-2 gap-3">
           <Rot t="Plano"><select className={campo} value={b.plan} onChange={set('plan')}><option value="free">Gratuito</option><option value="destaque">Destaque</option><option value="premium">Parceiro</option></select></Rot>
           <Rot t="Situação"><select className={campo} value={b.status} onChange={set('status')}><option value="active">Visível</option><option value="hidden">Oculto</option></select></Rot>
+          <Rot t="Comodidades" full><div className="flex flex-wrap gap-1.5">{COMODIDADES.map(([id, nome]) => { const on = (b.amenities || []).includes(id); return <button key={id} type="button" onClick={() => setB(v => ({ ...v, amenities: on ? (v.amenities || []).filter(x => x !== id) : [...(v.amenities || []), id] }))} aria-pressed={on} className="chip h-8 min-h-0 px-3 text-[12px]">{nome}</button> })}</div></Rot>
           <Rot t="Validação"><select className={campo} value={b.validation} onChange={set('validation')}><option value="confirmado">Confirmado</option><option value="provavel">Provável</option><option value="verificar">Verificar</option><option value="pendente">Pendente</option></select></Rot>
           <Rot t="Notas internas" full><textarea className={campo} rows={2} value={b.internal_notes || ''} onChange={set('internal_notes')} /></Rot>
         </div>
@@ -96,6 +98,7 @@ export function AdminBusinesses() {
     if (q && !norm(b.name).includes(norm(q))) return false
     if (filtro === 'sem-horario') return !b.hours && !b.open_24h && ['Emergência', 'Comer', 'Comprar', 'Serviços', 'Fazer'].includes(b.urgency_group)
     if (filtro === 'verificar') return ['verificar', 'pendente'].includes(b.validation)
+    if (filtro === 'rascunhos') return b.status === 'draft'
     if (filtro === 'ocultos') return b.status !== 'active'
     return true
   }), [lista, q, filtro])
@@ -107,7 +110,7 @@ export function AdminBusinesses() {
         <button onClick={() => setEditando({})} className="botao botao-pri"><Plus size={16} />Novo</button>
       </div>
       <div className="flex gap-1.5 overflow-x-auto py-3 scrollbar-hide">
-        {[['todos', 'Todos'], ['sem-horario', 'Sem horário'], ['verificar', 'A verificar'], ['ocultos', 'Ocultos']].map(([k, r]) => (
+        {[['todos', 'Todos'], ['rascunhos', 'Autocadastros'], ['sem-horario', 'Sem horário'], ['verificar', 'A verificar'], ['ocultos', 'Ocultos']].map(([k, r]) => (
           <button key={k} onClick={() => setFiltro(k)} className={`chip ${filtro === k ? 'ativo' : ''}`}>{r}</button>
         ))}
       </div>
