@@ -88,13 +88,13 @@ function BottomSheet({ business, onClose }) {
   if (!business) return null
 
   return (
-    <div className="absolute bottom-20 left-0 right-0 mx-4 bg-white rounded-2xl shadow-2xl p-4 z-[1000]">
+    <div className="absolute bottom-20 left-0 right-0 mx-5 bg-white rounded-[var(--raio)] shadow-2xl p-4 z-[1000]">
       <div className="flex items-start gap-3">
         {business.images?.[0] ? (
           <img src={business.images[0]} alt={business.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
         ) : (
           <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-2xl shrink-0">
-            <Icon name={iconeDe(business)} size={24} className="text-[#626a63]" />
+            <Icon name={iconeDe(business)} size={24} className="text-[var(--leve)]" />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export function MapPage() {
   return (
     <Layout title="Mapa" showBack={false}>
       <div className="relative flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
-        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-hide absolute top-0 left-0 right-0 z-[999] bg-gradient-to-b from-white/80 to-transparent backdrop-blur-sm">
+        <div className="flex gap-2 px-5 py-2 overflow-x-auto scrollbar-hide absolute top-0 left-0 right-0 z-[999] bg-gradient-to-b from-white/80 to-transparent backdrop-blur-sm">
           <button
             onClick={() => setSelectedCategory(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
@@ -165,7 +165,7 @@ export function MapPage() {
         </div>
 
         {!loading && (
-          <p className="absolute bottom-24 left-4 right-4 z-[998] rounded-xl bg-white/95 px-3 py-2 text-xs text-[#626a63] shadow">
+          <p className="absolute bottom-24 left-4 right-4 z-[998] rounded-xl bg-white/95 px-3 py-2 text-xs text-[var(--leve)] shadow">
             {businesses.filter(b => b.latitude).length} de {businesses.length} lugares já têm localização no mapa. Os outros estão sendo marcados.
           </p>
         )}

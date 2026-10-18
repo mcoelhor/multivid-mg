@@ -40,15 +40,15 @@ function CartaoParceiro({ id, p }) {
   const [semBanner, setSemBanner] = useState(false)
   const msg = `Olá! Vi a ${p.nome} no Portal Monte Verde e gostaria de conversar sobre um projeto.`
   return (
-    <article className="entra overflow-hidden rounded-2xl bg-white" style={{ boxShadow: `inset 0 4px 0 ${p.cor}` }}>
+    <article className="revela overflow-hidden rounded-[var(--raio)] bg-[var(--papel)]">
       {!semBanner && (
-        <img src={p.banner} alt={`${p.nome}: ${p.slogan}`} className="mt-1 w-full aspect-[16/7] object-cover" loading="lazy" onError={() => setSemBanner(true)} />
+        <img src={p.banner} alt={`${p.nome}: ${p.slogan}`} className="w-full aspect-[16/7] object-cover" loading="lazy" onError={() => setSemBanner(true)} />
       )}
-      <div className="p-4">
-        <h3 className="text-lg font-bold" style={{ color: p.cor }}>{p.nome}</h3>
-        <p className="text-sm italic text-[#626a63]">{p.slogan}</p>
-        <p className="mt-1 text-sm text-[#17241c]">{p.servicos}</p>
-        <div className="mt-3 flex gap-2">
+      <div className="p-5">
+        <h3 className="text-[22px] font-extrabold tracking-[-0.02em]" style={{ color: p.cor }}>{p.nome}</h3>
+        <p className="mt-0.5 text-[16px] text-[var(--leve)]">{p.slogan}</p>
+        <p className="mt-2 text-[16px] leading-snug">{p.servicos}</p>
+        <div className="mt-4 flex gap-2">
           {p.wa && (
             <a href={linkWhatsApp(p.wa, msg)} target="_blank" rel="noopener noreferrer" onClick={() => registrar('parceiro', { term: `${id}:whatsapp` })} className="botao botao-wa flex-1">
               <MessageCircle size={16} />WhatsApp
@@ -56,7 +56,7 @@ function CartaoParceiro({ id, p }) {
           )}
           <button onClick={() => setForm(v => !v)} aria-expanded={form} className={`botao flex-1 ${p.wa ? 'botao-sec' : 'botao-pri'}`}>Pedir orçamento</button>
           {p.site && (
-            <a href={`${p.site}?utm_source=monteverdemg&utm_medium=app`} target="_blank" rel="noopener noreferrer" onClick={() => registrar('parceiro', { term: `${id}:site` })} className="botao botao-sec w-11 px-0" aria-label={`Site da ${p.nome}`}>
+            <a href={`${p.site}?utm_source=monteverdemg&utm_medium=app`} target="_blank" rel="noopener noreferrer" onClick={() => registrar('parceiro', { term: `${id}:site` })} className="botao botao-sec w-12 px-0" aria-label={`Site da ${p.nome}`}>
               <Globe size={17} />
             </a>
           )}
@@ -74,11 +74,10 @@ export function Parceiros({ contexto = 'construcao' }) {
   const [titulo, sub] = TEXTOS[contexto] || TEXTOS.construcao
   const ordem = contexto === 'imobiliarias' ? ['construtora', 'toca'] : ['toca', 'construtora']
   return (
-    <section className="px-4 py-5" aria-label="Parceiros do portal">
-      <span className="inline-block rounded-md bg-[#f2e7c6] px-2 py-0.5 text-[11px] font-bold text-[#6b5413]">Parceiros do portal</span>
-      <h2 className="mt-2 text-xl font-bold text-[#17241c]">{titulo}</h2>
-      <p className="text-sm text-[#626a63]">{sub}</p>
-      <div className="mt-3 space-y-3">
+    <section className="px-5 py-6" aria-label="Parceiros do guia">
+      <h2 className="titulo revela">{titulo}</h2>
+      <p className="revela mt-2 text-[16px] leading-relaxed text-[var(--leve)]">{sub} <span className="font-bold text-[var(--araucaria)]">Parceiros do guia.</span></p>
+      <div className="mt-5 space-y-3">
         {ordem.map(k => <CartaoParceiro key={k} id={k} p={PARCEIROS[k]} />)}
       </div>
     </section>

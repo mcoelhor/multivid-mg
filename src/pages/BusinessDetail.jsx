@@ -3,10 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Phone, MessageCircle, Navigation, Share2, Heart, MapPin, Globe, Clock, ChevronLeft, ChevronDown, Mail, Flag } from 'lucide-react'
 import { useBusinessBySlug, useBusinesses } from '../hooks/useBusinesses'
 import { useFavorites } from '../hooks/useFavorites'
-import { Capa, BusinessCard } from '../components/UI/BusinessCard'
+import { Capa, BusinessCard, planoAtivo } from '../components/UI/BusinessCard'
 import { StatusPill, ParceiroBadge } from '../components/UI/Badge'
 import { InstagramIcon } from '../components/UI/Icon'
 import { BottomNav } from '../components/Layout/BottomNav'
+import { Rodape } from '../components/Layout/Rodape'
 import { Parceiros } from '../components/Parceiros'
 import { nomeSub } from '../data/categories'
 import { semanaLinhas } from '../lib/horario'
@@ -16,7 +17,7 @@ function Fotos({ b }) {
   const [i, setI] = useState(0)
   if (!b.images?.length) return <Capa b={b} alto="h-44" grande />
   return (
-    <div className="relative h-64 overflow-hidden bg-[#ebe6db]">
+    <div className="relative h-64 overflow-hidden bg-[var(--nevoa-2)]">
       <div className="flex h-full snap-x snap-mandatory overflow-x-auto scrollbar-hide" onScroll={e => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
         {b.images.map((src, k) => <img key={src} src={src} alt={k === 0 ? b.name : ''} className="h-full w-full shrink-0 snap-center object-cover" />)}
       </div>
@@ -76,22 +77,22 @@ export function BusinessDetail() {
     <div className="flex min-h-dvh flex-col pb-safe">
       <div className="relative">
         <Fotos b={b} />
-        <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="pressiona absolute left-4 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }} aria-label="Voltar"><ChevronLeft size={22} /></button>
+        <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="pressiona absolute left-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }} aria-label="Voltar"><ChevronLeft size={22} /></button>
         <div className="absolute right-4 flex gap-2" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }}>
-          <button onClick={() => compartilhar(b)} className="pressiona flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" aria-label="Compartilhar"><Share2 size={18} /></button>
-          <button onClick={() => toggleBusiness(b.id)} aria-pressed={fav} className="pressiona flex h-10 w-10 items-center justify-center rounded-xl bg-black/30 text-white backdrop-blur" aria-label="Favoritar"><Heart size={18} className={`coracao ${fav ? 'ativo' : ''}`} /></button>
+          <button onClick={() => compartilhar(b)} className="pressiona flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" aria-label="Compartilhar"><Share2 size={18} /></button>
+          <button onClick={() => toggleBusiness(b.id)} aria-pressed={fav} className="pressiona flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" aria-label="Favoritar"><Heart size={18} className={`coracao ${fav ? 'ativo' : ''}`} /></button>
         </div>
       </div>
 
-      <div className="relative z-10 -mt-4 flex-1 rounded-t-3xl bg-[var(--creme)] px-4 pt-5">
+      <div className="relative z-10 -mt-4 flex-1 rounded-t-[28px] bg-[var(--nevoa)] px-5 pt-6">
         <div className="sobe" style={{ '--i': 0 }}>
-          <p className="text-[13px] font-semibold text-[var(--verde)]">{nomeSub(b)}</p>
-          <h1 className="mt-0.5 text-[24px] font-extrabold leading-tight">{b.name}</h1>
+          <h1 className="titulo">{b.name}</h1>
+          <p className="mt-2 text-[16px] font-semibold text-[var(--musgo)]">{nomeSub(b)}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusPill st={b.st} longo />
-            {b.plan === 'premium' && <ParceiroBadge />}
+            {planoAtivo(b) !== 'free' && <ParceiroBadge plano={planoAtivo(b)} />}
           </div>
-          {b.description && <p className="mt-3 text-[15px] leading-relaxed text-[#3f4a43]">{b.description}</p>}
+          {b.description && <p className="mt-3 text-[17px] leading-relaxed">{b.description}</p>}
         </div>
 
         {/* Ações principais: grandes e no topo, porque quem abre aqui geralmente tem pressa */}
@@ -101,7 +102,7 @@ export function BusinessDetail() {
           {(b.address || b.latitude) && <a href={linkRota(b)} target="_blank" rel="noopener noreferrer" onClick={acao('rota')} className={`botao botao-claro ${b.phone && b.whatsapp ? 'col-span-2' : ''}`} style={{ minHeight: 52 }}><Navigation size={18} />Como chegar</a>}
         </div>
 
-        <dl className="sobe mt-4 divide-y divide-black/5 rounded-2xl bg-white" style={{ '--i': 2 }}>
+        <dl className="sobe mt-4 divide-y divide-[var(--nevoa)] rounded-[var(--raio)] bg-[var(--papel)]" style={{ '--i': 2 }}>
           {b.address && (
             <div className="flex gap-3 p-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[var(--verde)]" /><div><dt className="sr-only">Endereço</dt><dd className="text-[15px]">{local}</dd></div></div>
           )}
@@ -115,12 +116,12 @@ export function BusinessDetail() {
             <button onClick={() => setHorarios(v => !v)} aria-expanded={horarios} disabled={!semana.length} className="flex w-full items-center gap-3 text-left">
               <Clock size={18} className="shrink-0 text-[var(--verde)]" />
               <span className="flex-1 text-[15px]">{semana.length ? 'Horários da semana' : 'Horário não informado'}</span>
-              {semana.length > 0 && <ChevronDown size={18} className="text-[#8a918b] transition-transform duration-200" style={{ transform: horarios ? 'rotate(180deg)' : 'none' }} />}
+              {semana.length > 0 && <ChevronDown size={18} className="text-[var(--leve)] transition-transform duration-200" style={{ transform: horarios ? 'rotate(180deg)' : 'none' }} />}
             </button>
             <div className={`abre ${horarios ? 'aberto' : ''}`}><div>
               <ul className="ml-[30px] mt-2 space-y-1">
                 {semana.map(l => (
-                  <li key={l.dias} className={`flex justify-between text-sm ${l.hoje ? 'font-semibold text-[var(--verde)]' : 'text-[#3f4a43]'}`}>
+                  <li key={l.dias} className={`flex justify-between text-sm ${l.hoje ? 'font-semibold text-[var(--verde)]' : 'text-[var(--araucaria)]'}`}>
                     <span>{l.dias}{l.hoje ? ' (hoje)' : ''}</span><span className="num">{l.texto}</span>
                   </li>
                 ))}
@@ -139,18 +140,18 @@ export function BusinessDetail() {
           )}
         </dl>
 
-        <Link to="/mais#corrigir" className="mt-3 flex items-center gap-2 px-1 text-[13px] text-[#626a63]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
+        <Link to="/mais#corrigir" className="mt-3 flex items-center gap-2 px-1 text-[13px] text-[var(--leve)]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
       </div>
 
       {(b.category === 'construcao' || b.category === 'imobiliarias') && <Parceiros contexto={b.category} />}
 
       {outros.length > 0 && (
-        <section className="px-4 pt-6">
-          <h2 className="mb-3 text-lg font-bold">Outros por perto</h2>
+        <section className="px-5 pt-6">
+          <h2 className="titulo mb-4">Outros parecidos</h2>
           <div className="space-y-3">{outros.map((x, i) => <BusinessCard key={x.id} business={x} index={i} compacto />)}</div>
         </section>
       )}
-      <div className="h-6" />
+      <Rodape />
       <BottomNav />
     </div>
   )

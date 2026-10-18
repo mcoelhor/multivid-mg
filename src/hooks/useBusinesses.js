@@ -5,7 +5,7 @@ import { buscar } from '../lib/busca'
 
 // A base inteira tem poucas centenas de lugares: carrega uma vez e filtra no celular.
 // Assim a busca é instantânea e funciona mesmo com sinal fraco depois do primeiro acesso.
-const CACHE_KEY = 'mv_lugares_v1'
+const CACHE_KEY = 'mv_lugares_v2'
 let estado = { lista: lerCache(), carregando: true, erro: null }
 const ouvintes = new Set()
 let pedido = null
@@ -59,11 +59,13 @@ export function useRelogio() {
 }
 
 const PLANO = { premium: 0, destaque: 1, free: 2 }
+const planoVale = b => (b.plan_expires_at && new Date(b.plan_expires_at) <= new Date() ? 'free' : b.plan)
 
 export function ordenar(lista) {
   return [...lista].sort((a, b) =>
+    (planoVale(a) === 'premium' ? 0 : 1) - (planoVale(b) === 'premium' ? 0 : 1) ||
     pesoEstado(a.st) - pesoEstado(b.st) ||
-    (PLANO[a.plan] ?? 2) - (PLANO[b.plan] ?? 2) ||
+    (PLANO[planoVale(a)] ?? 2) - (PLANO[planoVale(b)] ?? 2) ||
     a.name.localeCompare(b.name, 'pt-BR'))
 }
 

@@ -8,11 +8,11 @@ export function ContatoLinha({ b, index = 0 }) {
   const borda = { aberto: '#2e7d32', plantao: 'var(--ouro)', fechado: '#d8d3c7', desconhecido: '#d8d3c7' }[b.st?.estado] || '#d8d3c7'
   const local = [b.address, b.city && b.city !== 'Monte Verde' ? b.city : ''].filter(Boolean).join(' · ')
   return (
-    <li className="entra rounded-2xl bg-white p-4" style={{ '--i': Math.min(index, 10), boxShadow: `inset 4px 0 0 ${borda}` }}>
+    <li className="entra rounded-[var(--raio)] bg-white p-4" style={{ '--i': Math.min(index, 10), boxShadow: `inset 4px 0 0 ${borda}` }}>
       <Link to={`/estabelecimento/${b.slug}`} className="block pressiona">
-        <span className="block text-[16px] font-bold leading-snug text-[#17241c]">{b.name}</span>
+        <span className="block text-[16px] font-bold leading-snug ">{b.name}</span>
         <StatusPill st={b.st} longo className="mt-1.5" />
-        {local && <span className="mt-1.5 block text-[13px] text-[#626a63]">{local}</span>}
+        {local && <span className="mt-1.5 block text-[13px] text-[var(--leve)]">{local}</span>}
       </Link>
       <div className="mt-3 flex gap-2">
         {b.phone ? (

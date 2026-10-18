@@ -1,43 +1,30 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search } from 'lucide-react'
 
-export function Header({ title, showBack, showSearch, onSearchClick, subtitle, tom = 'verde' }) {
+/** Cabeçalho das páginas internas: chapado, título grande, sem sombra. */
+export function Header({ title, showBack, showSearch, onSearchClick, subtitle, tom = 'claro' }) {
   const navigate = useNavigate()
-  const location = useLocation()
-  const isHome = location.pathname === '/'
   const sos = tom === 'sos'
+  const escuro = tom === 'escuro' || sos
+  const fundo = sos ? 'var(--sos)' : escuro ? 'var(--araucaria)' : 'var(--nevoa)'
+  const tinta = escuro ? '#fff' : 'var(--araucaria)'
+  const botao = escuro ? 'bg-white/12 text-white' : 'bg-[var(--papel)] text-[var(--araucaria)]'
 
   return (
-    <header
-      className="sticky top-0 z-40 px-4"
-      style={{ background: sos ? 'var(--sos)' : 'var(--verde)', paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingBottom: 12 }}
-    >
-      <div className="flex items-center gap-3 min-h-9">
+    <header className="sticky top-0 z-40 px-5" style={{ background: fundo, color: tinta, paddingTop: 'calc(env(safe-area-inset-top) + 14px)', paddingBottom: 14 }}>
+      <div className="flex min-h-11 items-center gap-3">
         {showBack && (
-          <button
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
-            className="pressiona w-10 h-10 -ml-1 flex items-center justify-center rounded-xl bg-white/15 text-white"
-            aria-label="Voltar"
-          >
+          <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className={`pressiona -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${botao}`} aria-label="Voltar">
             <ArrowLeft size={20} />
           </button>
         )}
-        <div className="flex-1 min-w-0">
-          {isHome ? (
-            <div className="flex items-baseline gap-2">
-              <span className="text-white font-extrabold text-[19px] tracking-tight">Monte Verde</span>
-              <span className="text-[#bfe3c9] text-xs font-semibold">MG</span>
-            </div>
-          ) : (
-            <>
-              <h1 className="text-white font-bold text-[17px] leading-tight truncate">{title}</h1>
-              {subtitle && <p className="text-white/70 text-xs truncate mt-0.5">{subtitle}</p>}
-            </>
-          )}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[24px] font-extrabold leading-tight tracking-[-0.03em]">{title}</h1>
+          {subtitle && <p className={`mt-0.5 truncate text-[14px] ${escuro ? 'text-white/70' : 'text-[var(--leve)]'}`}>{subtitle}</p>}
         </div>
         {showSearch && (
-          <button onClick={onSearchClick || (() => navigate('/busca'))} className="pressiona w-10 h-10 flex items-center justify-center rounded-xl bg-white/15 text-white" aria-label="Buscar">
-            <Search size={18} />
+          <button onClick={onSearchClick || (() => navigate('/busca'))} className={`pressiona flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${botao}`} aria-label="Buscar">
+            <Search size={19} />
           </button>
         )}
       </div>

@@ -8,7 +8,7 @@ export const INTERESSES = {
   projeto: 'Projeto de engenharia',
   chale: 'Construir chalé ou casa',
   imoveis: 'Comprar terreno ou imóvel',
-  anunciar: 'Anunciar meu negócio no portal',
+  anunciar: 'Cadastrar meu negócio no guia',
   correcao: 'Corrigir uma informação do portal',
   outro: 'Outro assunto',
 }
@@ -40,17 +40,17 @@ export function LeadForm({ empresa = 'portal', interesse = '', titulo, botao = '
 
   if (estado === 'ok') {
     return (
-      <div className={`entra flex items-start gap-3 rounded-2xl bg-[#e3f1e4] p-4 text-[#1f6b2a] ${compacto ? '' : 'mt-2'}`}>
+      <div className={`entra flex items-start gap-3 rounded-[var(--raio)] bg-[#dcefdc] p-4 text-[#1f6b2a] ${compacto ? '' : 'mt-2'}`}>
         <Check size={20} className="mt-0.5 shrink-0" />
-        <p className="text-sm font-medium">Recebido. Vamos responder pelo WhatsApp que você informou.</p>
+        <p className="text-[15px] font-semibold">Recebido. Vamos responder pelo WhatsApp que você informou.</p>
       </div>
     )
   }
 
-  const campo = 'w-full rounded-xl bg-[#f4f1eb] px-3.5 py-3 text-[15px] text-[#17241c] placeholder:text-[#8a918b] focus:bg-white focus:shadow-[inset_0_0_0_1.5px_var(--verde)] transition'
+  const campo = 'w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px] text-[var(--araucaria)] placeholder:text-[#7d847f] focus:bg-white focus:shadow-[inset_0_0_0_2px_var(--musgo)] transition-[background-color,box-shadow] duration-150'
   return (
-    <form onSubmit={enviar} className={compacto ? 'space-y-2.5' : 'space-y-3 rounded-2xl bg-white p-4'} noValidate>
-      {titulo && <h3 className="text-lg font-bold text-[#17241c]">{titulo}</h3>}
+    <form onSubmit={enviar} className={compacto ? 'space-y-2.5' : 'space-y-3 rounded-[var(--raio)] bg-[var(--papel)] p-5'} noValidate>
+      {titulo && <h3 className="text-[20px] font-extrabold tracking-[-0.02em]">{titulo}</h3>}
       <input aria-hidden="true" tabIndex={-1} autoComplete="off" value={f.site} onChange={set('site')} className="absolute -left-[9999px] h-px w-px" />
       <input className={campo} placeholder="Seu nome" autoComplete="name" value={f.name} onChange={set('name')} maxLength={120} />
       <input className={campo} placeholder="WhatsApp com DDD" type="tel" inputMode="tel" autoComplete="tel" value={f.phone} onChange={set('phone')} maxLength={40} />
@@ -61,11 +61,11 @@ export function LeadForm({ empresa = 'portal', interesse = '', titulo, botao = '
         </select>
       )}
       <textarea className={campo} rows={3} placeholder="Conte rapidamente o que você precisa" value={f.message} onChange={set('message')} maxLength={2000} />
-      <label className="flex items-start gap-2.5 text-[13px] text-[#626a63]">
+      <label className="flex items-start gap-2.5 text-[14px] text-[var(--leve)]">
         <input type="checkbox" checked={f.lgpd} onChange={set('lgpd')} className="mt-0.5 h-4 w-4 accent-[var(--verde)]" />
         Autorizo o contato pelos dados acima para responder a este pedido.
       </label>
-      {aviso && <p className="text-[13px] font-medium text-[#8a3b2e]" role="alert">{aviso}</p>}
+      {aviso && <p className="text-[14px] font-semibold text-[#8a3b2e]" role="alert">{aviso}</p>}
       <button type="submit" disabled={estado === 'enviando'} className="botao botao-pri w-full disabled:opacity-60">
         <Send size={16} />{estado === 'enviando' ? 'Enviando…' : botao}
       </button>

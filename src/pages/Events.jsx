@@ -46,7 +46,7 @@ export function Events() {
   return (
     <Layout title="Eventos" subtitle="Monte Verde e região">
       <div className="pt-3">
-        <div className="flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto px-5 pb-2 scrollbar-hide">
           {DATE_FILTERS.map(f => (
             <button
               key={String(f.id)}
@@ -61,7 +61,7 @@ export function Events() {
           ))}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-hide">
           {CATEGORY_FILTERS.map(f => (
             <button
               key={String(f.id)}
@@ -84,7 +84,7 @@ export function Events() {
             <p className="text-sm text-gray-500 mt-1">A agenda de Monte Verde está sendo montada. Tem um evento? Avise pelo menu Mais.</p>
           </div>
         ) : (
-          <div className="px-4 space-y-4 pb-4">
+          <div className="px-5 space-y-4 pb-4">
             {events.map(ev => <EventCard key={ev.id} event={ev} />)}
           </div>
         )}
@@ -97,7 +97,7 @@ export function EventDetail() {
   const navigate = useNavigate()
   const { id } = useParams()
   const { event, loading } = useEvent(id)
-  if (loading) return <Layout title="Evento" showBack><div className="esqueleto m-4 h-64 rounded-2xl" /></Layout>
+  if (loading) return <Layout title="Evento" showBack><div className="esqueleto m-4 h-64 rounded-[var(--raio)]" /></Layout>
 
   if (!event) {
     return (
@@ -136,7 +136,7 @@ export function EventDetail() {
             </span>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-4 space-y-2.5">
+          <div className="bg-gray-50 rounded-[var(--raio)] p-4 space-y-2.5">
             <div className="flex items-center gap-3 text-sm">
               <Calendar size={16} className="text-green-700 shrink-0" />
               <span className="text-gray-700">{formatDate(event.date_start)}</span>
@@ -163,12 +163,12 @@ export function EventDetail() {
 
           <div className="space-y-2">
             {event.whatsapp && (
-              <button onClick={openWhatsApp} className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-green-500 text-white font-semibold text-sm">
+              <button onClick={openWhatsApp} className="w-full flex items-center justify-center gap-2 py-3 rounded-[var(--raio)] bg-green-500 text-white font-semibold text-sm">
                 <MessageCircle size={18} /> Falar no WhatsApp
               </button>
             )}
             {(event.latitude || event.location) && (
-              <button onClick={openMaps} className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-50 text-amber-800 font-semibold text-sm border border-amber-200">
+              <button onClick={openMaps} className="w-full flex items-center justify-center gap-2 py-3 rounded-[var(--raio)] bg-amber-50 text-amber-800 font-semibold text-sm border border-amber-200">
                 <MapPin size={18} /> Como chegar
               </button>
             )}

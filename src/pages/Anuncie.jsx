@@ -1,30 +1,228 @@
-import { Check } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Check, ArrowRight, Search, Loader2, MessageCircle, BarChart3, MousePointerClick, Route } from 'lucide-react'
 import { Layout } from '../components/Layout/Layout'
-import { LeadForm } from '../components/LeadForm'
+import { supabase } from '../lib/supabase'
+import { useBusinesses } from '../hooks/useBusinesses'
+import { norm } from '../lib/busca'
+import { FOTOS } from '../data/fotos'
+import { registrar } from '../lib/track'
 
-const PLANOS = [
-  { nome: 'Gratuito', itens: ['Página com endereço, telefone e WhatsApp', 'Horário e selo “aberto agora”', 'Aparece na busca por problema'] },
-  { nome: 'Destaque', itens: ['Tudo do gratuito', 'Fotos e descrição completa', 'Relatório mensal: visitas, ligações, WhatsApp e rotas'] },
-  { nome: 'Parceiro', destaque: true, itens: ['Tudo do Destaque', 'Prioridade na sua categoria, com selo “Parceiro”', 'Presença na página inicial'] },
+const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/checkout'
+const GRATIS = { id: 'free', nome: 'Grátis', preco: 0, beneficios: ['Página com endereço, telefone, WhatsApp e rota', 'Selo “aberto agora” pelo seu horário', 'Aparece na busca e no mapa'] }
+const reais = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })
+
+function usePlanos() {
+  const [planos, setPlanos] = useState(null)
+  useEffect(() => {
+    supabase.from('planos').select('id,nome,preco,dias,beneficios,ordem').eq('ativo', true).order('ordem')
+      .then(({ data }) => setPlanos(data?.length ? data : [
+        { id: 'destaque', nome: 'Destaque', preco: 49, dias: 30, beneficios: [] },
+        { id: 'premium', nome: 'Parceiro', preco: 129, dias: 30, beneficios: [] },
+      ]))
+  }, [])
+  return planos
+}
+
+/** Escolha do próprio negócio na lista (ou nome novo, se ainda não estiver no guia). */
+function EscolheNegocio({ valor, onChange }) {
+  const { businesses } = useBusinesses({})
+  const [q, setQ] = useState(valor?.name || '')
+  const [aberto, setAberto] = useState(false)
+  const achados = useMemo(() => {
+    const t = norm(q)
+    if (t.length < 2) return []
+    return businesses.filter(b => norm(b.name).includes(t) && b.category !== 'emergencia').slice(0, 6)
+  }, [q, businesses])
+  return (
+    <div className="relative">
+      <label className="block text-[15px] font-bold" htmlFor="neg">Nome do seu negócio</label>
+      <div className="relative mt-1.5">
+        <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--leve)]" />
+        <input id="neg" value={q} autoComplete="off" required minLength={2}
+          onChange={e => { setQ(e.target.value); setAberto(true); onChange({ id: null, name: e.target.value }) }}
+          onFocus={() => setAberto(true)} onBlur={() => setTimeout(() => setAberto(false), 150)}
+          placeholder="Comece a digitar" className="h-13 w-full rounded-2xl bg-[var(--nevoa)] py-3.5 pl-11 pr-4 text-[16px]" />
+      </div>
+      {valor?.id && <p className="mt-1.5 flex items-center gap-1.5 text-[14px] font-semibold text-[var(--musgo)]"><Check size={15} />Já está no guia: o plano entra nesta página</p>}
+      {aberto && achados.length > 0 && !valor?.id && (
+        <ul className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl bg-white py-1" style={{ boxShadow: '0 16px 40px -12px rgba(18,26,21,.35)' }}>
+          {achados.map(b => (
+            <li key={b.id}>
+              <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { onChange({ id: b.id, name: b.name }); setQ(b.name); setAberto(false) }}
+                className="w-full px-4 py-2.5 text-left text-[15px] hover:bg-[var(--nevoa)]">
+                <span className="font-bold">{b.name}</span><span className="text-[var(--leve)]"> · {b.address || b.city}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function Pedido({ plano, onFechar }) {
+  const [neg, setNeg] = useState({ id: null, name: '' })
+  const [f, setF] = useState({ contato_nome: '', contato_whatsapp: '', contato_email: '', site_url: '' })
+  const [estado, setEstado] = useState('') // '', enviando, recebido, erro
+  const [msg, setMsg] = useState('')
+  const set = k => e => setF(v => ({ ...v, [k]: e.target.value }))
+
+  async function enviar(e) {
+    e.preventDefault()
+    setEstado('enviando'); setMsg('')
+    try {
+      const r = await fetch(FUNCAO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, plano: plano.id, business_id: neg.id, nome_negocio: neg.name }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.erro || 'Não foi possível enviar.')
+      registrar('lead', { term: `plano:${plano.id}` })
+      if (d.checkout) { window.location.href = d.checkout; return }
+      setEstado('recebido')
+    } catch (err) { setEstado('erro'); setMsg(err.message) }
+  }
+
+  if (estado === 'recebido') {
+    return (
+      <div className="rounded-[var(--raio)] bg-[var(--papel)] p-6">
+        <h3 className="text-[24px] font-extrabold tracking-[-0.03em]">Pedido recebido</h3>
+        <p className="mt-2 text-[16px] leading-relaxed text-[var(--leve)]">O pagamento online entra no ar nos próximos dias. Vamos te chamar no WhatsApp para ativar o plano {plano.nome} agora mesmo.</p>
+        <button onClick={onFechar} className="botao botao-sec mt-5 w-full">Voltar aos planos</button>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={enviar} className="rounded-[var(--raio)] bg-[var(--papel)] p-5">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-[24px] font-extrabold tracking-[-0.03em]">Plano {plano.nome}</h3>
+        <span className="num text-[18px] font-bold">{reais(plano.preco)}<span className="text-[14px] font-medium text-[var(--leve)]">/mês</span></span>
+      </div>
+      <div className="mt-5 space-y-4">
+        <EscolheNegocio valor={neg} onChange={setNeg} />
+        <div>
+          <label className="block text-[15px] font-bold" htmlFor="cn">Seu nome</label>
+          <input id="cn" value={f.contato_nome} onChange={set('contato_nome')} autoComplete="name" className="mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]" />
+        </div>
+        <div>
+          <label className="block text-[15px] font-bold" htmlFor="cw">WhatsApp com DDD</label>
+          <input id="cw" value={f.contato_whatsapp} onChange={set('contato_whatsapp')} required inputMode="tel" autoComplete="tel" placeholder="(35) 9 9999-9999" className="mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]" />
+        </div>
+        <div>
+          <label className="block text-[15px] font-bold" htmlFor="ce">E-mail para o recibo</label>
+          <input id="ce" type="email" value={f.contato_email} onChange={set('contato_email')} autoComplete="email" className="mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]" />
+        </div>
+        <input tabIndex={-1} aria-hidden="true" value={f.site_url} onChange={set('site_url')} className="absolute -left-[9999px] h-0 w-0" />
+      </div>
+      {msg && <p className="mt-4 text-[15px] font-semibold text-[var(--sos)]" role="alert">{msg}</p>}
+      <button disabled={estado === 'enviando'} className="botao botao-pri mt-5 h-14 w-full text-[17px]">
+        {estado === 'enviando' ? <><Loader2 size={18} className="animate-spin" />Abrindo pagamento…</> : <>Pagar com Pix ou cartão <ArrowRight size={18} /></>}
+      </button>
+      <p className="mt-3 text-center text-[14px] text-[var(--leve)]">Pagamento seguro pelo Mercado Pago. Vale {plano.dias} dias, sem fidelidade.</p>
+      <button type="button" onClick={onFechar} className="mt-2 w-full py-2 text-[15px] font-semibold text-[var(--leve)]">Escolher outro plano</button>
+    </form>
+  )
+}
+
+const MOTIVOS = [
+  [MousePointerClick, 'Na hora da decisão', 'O turista abre o guia quando já está na vila, procurando onde comer, dormir ou passear agora.'],
+  [Route, 'Dentro do roteiro', 'Planos pagos entram nas sugestões do roteiro montado para cada visitante.'],
+  [MessageCircle, 'Direto no seu WhatsApp', 'Um toque e o cliente fala com você, já dizendo que veio pelo Monte Verde MG.'],
+  [BarChart3, 'Você vê o resultado', 'Relatório de visitas, ligações, WhatsApp e rotas para o seu negócio.'],
 ]
 
 export function Anuncie() {
+  const planos = usePlanos()
+  const [escolhido, setEscolhido] = useState(null)
+  const todos = planos ? [GRATIS, ...planos] : null
+
   return (
-    <Layout title="Seu negócio no portal" showBack>
-      <div className="px-4 pt-4">
-        <p className="text-[15px] text-[#3f4a43]">Quem chega em Monte Verde procura aqui farmácia, jantar, mecânico e pousada. O cadastro básico é gratuito.</p>
-        <div className="mt-4 space-y-2">
-          {PLANOS.map((p, i) => (
-            <div key={p.nome} className="entra rounded-2xl bg-white p-4" style={{ '--i': i, boxShadow: p.destaque ? 'inset 0 4px 0 var(--ouro)' : undefined }}>
-              <h3 className="text-[17px] font-bold">{p.nome}</h3>
-              <ul className="mt-2 space-y-1.5">
-                {p.itens.map(t => <li key={t} className="flex gap-2 text-sm text-[#3f4a43]"><Check size={16} className="mt-0.5 shrink-0 text-[var(--verde)]" />{t}</li>)}
-              </ul>
-            </div>
+    <Layout title="Anuncie" showBack hideHeader>
+      <section className="relative">
+        <img src={FOTOS.avenida.g} srcSet={`${FOTOS.avenida.p} 700w, ${FOTOS.avenida.g} 1600w`} sizes="480px" alt={FOTOS.avenida.legenda} className="h-[56svh] min-h-[380px] w-full object-cover" />
+        <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,14,12,.5) 0%, rgba(10,14,12,0) 35%, rgba(10,14,12,.75) 100%)' }} />
+        <Link to="/" className="pressiona absolute left-5 flex h-11 items-center rounded-full bg-white px-4 text-[15px] font-bold text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}>Monte Verde</Link>
+        <h1 className="sobe titulo absolute bottom-6 left-5 right-5 text-white">Seja encontrado por quem já está na vila</h1>
+      </section>
+
+      <section className="bg-[var(--araucaria)] px-5 pb-12 pt-8 text-white">
+        <p className="lead max-w-[30ch]">Cadastro grátis para todo comércio de Monte Verde. Quer aparecer primeiro? Escolha um plano e ele entra no ar assim que o pagamento é aprovado.</p>
+        <ul className="mt-8 space-y-6">
+          {MOTIVOS.map(([I, t, d], k) => (
+            <li key={t} className="revela flex gap-4" style={{ '--i': k }}>
+              <I size={24} className="mt-0.5 shrink-0 text-[var(--broto)]" />
+              <div><h2 className="text-[19px] font-extrabold tracking-[-0.02em]">{t}</h2><p className="mt-1 text-[16px] leading-relaxed text-white/75">{d}</p></div>
+            </li>
           ))}
+        </ul>
+      </section>
+
+      <section className="px-5 pt-12" id="planos" style={{ scrollMarginTop: 16 }}>
+        <h2 className="titulo">Planos</h2>
+        {escolhido ? (
+          <div className="mt-6 entra"><Pedido plano={escolhido} onFechar={() => setEscolhido(null)} /></div>
+        ) : !todos ? (
+          <div className="mt-6 space-y-3">{[0, 1, 2].map(i => <div key={i} className="esqueleto h-48 rounded-[var(--raio)]" />)}</div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {todos.map((p, k) => {
+              const forte = p.id === 'premium'
+              return (
+                <article key={p.id} className={`entra rounded-[var(--raio)] p-6 ${forte ? 'bg-[var(--musgo)] text-white' : 'bg-[var(--papel)]'}`} style={{ '--i': k }}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-[26px] font-extrabold tracking-[-0.03em]">{p.nome}</h3>
+                    <p className="num text-[30px] font-extrabold tracking-[-0.03em]">{p.preco ? reais(p.preco) : 'R$ 0'}<span className={`text-[15px] font-medium ${forte ? 'text-white/70' : 'text-[var(--leve)]'}`}>{p.preco ? '/mês' : ''}</span></p>
+                  </div>
+                  {forte && <p className="mt-1 text-[15px] font-bold text-[var(--broto)]">O mais visto da vila</p>}
+                  <ul className="mt-4 space-y-2.5">
+                    {(p.beneficios || []).map(t => (
+                      <li key={t} className="flex gap-2.5 text-[16px] leading-snug"><Check size={18} className={`mt-0.5 shrink-0 ${forte ? 'text-[var(--broto)]' : 'text-[var(--musgo)]'}`} />{t}</li>
+                    ))}
+                  </ul>
+                  {p.id === 'free' ? (
+                    <Link to="/mais#cadastro" className="botao botao-sec mt-6 w-full">Cadastrar grátis</Link>
+                  ) : (
+                    <button onClick={() => setEscolhido(p)} className={`botao mt-6 w-full ${forte ? 'botao-claro' : 'botao-pri'}`}>Quero o {p.nome} <ArrowRight size={18} /></button>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+        )}
+        <p className="mt-5 text-[15px] leading-relaxed text-[var(--leve)]">Planos pagos aparecem sempre identificados como Destaque ou Parceiro. Cancelar é só não renovar: no fim do período, a página volta ao plano grátis.</p>
+      </section>
+    </Layout>
+  )
+}
+
+/** Volta do Mercado Pago: mostra se o plano já foi ativado. */
+export function AnuncieObrigado() {
+  const [params] = useSearchParams()
+  const id = params.get('id')
+  const [d, setD] = useState(null)
+  useEffect(() => {
+    if (!id) return
+    let n = 0, t
+    const busca = async () => {
+      const r = await fetch(`${FUNCAO}?status=${id}`).then(x => x.json()).catch(() => null)
+      setD(r)
+      if (r?.status === 'pendente' && n++ < 20) t = setTimeout(busca, 3000)
+    }
+    busca()
+    return () => clearTimeout(t)
+  }, [id])
+  const aprovado = d?.status === 'aprovado'
+  return (
+    <Layout title="Pagamento" showBack>
+      <div className="px-5 pt-4">
+        <div className={`rounded-[var(--raio)] p-6 ${aprovado ? 'bg-[var(--musgo)] text-white' : 'bg-[var(--papel)]'}`}>
+          <h2 className="titulo">{aprovado ? 'Plano ativo!' : d?.status === 'recusado' ? 'Pagamento não aprovado' : 'Confirmando o pagamento…'}</h2>
+          <p className={`mt-3 text-[16px] leading-relaxed ${aprovado ? 'text-white/85' : 'text-[var(--leve)]'}`}>
+            {aprovado
+              ? `${d.nome_negocio} já aparece em destaque no guia${d.vigente_ate ? ` até ${new Date(d.vigente_ate).toLocaleDateString('pt-BR')}` : ''}.`
+              : d?.status === 'recusado' ? 'Tente de novo com outro meio de pagamento.' : 'Pix costuma confirmar em segundos. Pode fechar esta tela: o plano ativa sozinho assim que o pagamento for aprovado.'}
+          </p>
+          <Link to={d?.status === 'recusado' ? '/anuncie#planos' : '/'} className={`botao mt-6 w-full ${aprovado ? 'botao-claro' : 'botao-pri'}`}>{d?.status === 'recusado' ? 'Tentar de novo' : 'Ir para o guia'}</Link>
         </div>
-        <div className="mt-5"><LeadForm empresa="portal" interesse="anunciar" titulo="Quero cadastrar meu negócio" botao="Enviar cadastro" /></div>
-        <p className="mt-3 text-[13px] text-[#626a63]">Parceiros pagos são sempre identificados no portal.</p>
       </div>
     </Layout>
   )

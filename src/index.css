@@ -1,55 +1,83 @@
 @import "tailwindcss";
 
-/* ── Base ─────────────────────────────────────────────────────────── */
+/* ── Tokens ──────────────────────────────────────────────────────────
+   Cores tiradas da própria Monte Verde: névoa da manhã (fundo),
+   araucária (tinta), musgo (botão), madeira enxaimel e céu de inverno. */
 :root {
-  --verde: #14532d;
-  --verde-2: #1d6b3d;
-  --verde-escuro: #0d3a1f;
-  --creme: #f4f1eb;
-  --creme-2: #ebe6db;
-  --tinta: #17241c;
-  --leve: #626a63;
-  --sos: #b3261e;
-  --sos-fundo: #f8e7e3;
-  --ouro: #c9a54a;
-  --wa: #1e8e4e;
+  --nevoa: #eef0ec;        /* fundo */
+  --nevoa-2: #e2e6e0;      /* superfície um tom abaixo */
+  --papel: #ffffff;        /* linhas de lista */
+  --araucaria: #121a15;    /* tinta e campos escuros */
+  --araucaria-2: #1c2820;
+  --musgo: #2c6a45;        /* ação principal */
+  --musgo-2: #245a3a;
+  --broto: #cfe3c4;        /* destaque sobre fundo escuro */
+  --madeira: #6e4b31;
+  --ceu: #dfe6ea;
+  --leve: #5a625c;
 
-  /* Movimento: saída rápida, chegada suave (ease-out forte) */
+  /* Nomes antigos, apontando para a paleta nova */
+  --verde: var(--musgo);
+  --verde-2: var(--musgo-2);
+  --verde-escuro: var(--araucaria);
+  --creme: var(--nevoa);
+  --creme-2: var(--nevoa-2);
+  --tinta: var(--araucaria);
+  --sos: #b3261e;
+  --sos-fundo: #f6e4e0;
+  --ouro: #b98a2e;
+  --wa: #1f8a4c;
+
+  --raio: 20px;
+
+  --fs-mini: 13px;
+  --fs-texto: 16px;
+  --fs-lead: clamp(19px, 4.8vw, 22px);
+  --fs-titulo: clamp(30px, 8.6vw, 40px);
+  --fs-poster: clamp(68px, 21vw, 112px);
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --t-press: 120ms;
-  --t-hover: 160ms;
-  --t-ui: 220ms;
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --t-press: 140ms;
+  --t-hover: 180ms;
+  --t-ui: 240ms;
 }
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 
 html, body {
-  font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
-  background-color: var(--creme);
-  color: var(--tinta);
-  overscroll-behavior: none;
-  margin: 0;
-  padding: 0;
+  font-family: 'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  color: var(--araucaria);
+  overscroll-behavior-y: none;
+  margin: 0; padding: 0;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'tnum' 0;
 }
 
+/* No computador, o app fica como uma coluna de celular sobre a serra */
+body {
+  background: var(--araucaria) url('https://cpoxykaksqlrqnstjonv.supabase.co/storage/v1/object/public/fotos/cidade/mar-de-nuvens-g.webp') center / cover fixed;
+}
 #root {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100dvh;
-  position: relative;
-  background: var(--creme);
-  box-shadow: 0 0 60px rgba(13, 58, 31, 0.10);
+  max-width: 480px; margin: 0 auto; min-height: 100dvh; position: relative;
+  background: var(--nevoa);
+}
+@media (min-width: 900px) {
+  #root { margin: 0 0 0 max(6vw, calc(50vw - 560px)); }
+  .lado-desktop { display: block !important; }
 }
 
-h1, h2, h3 { text-wrap: balance; letter-spacing: -0.01em; }
+h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 .num { font-variant-numeric: tabular-nums; }
 
+.display { font-weight: 800; letter-spacing: -0.035em; line-height: 0.9; }
+.titulo { font-size: var(--fs-titulo); font-weight: 800; letter-spacing: -0.03em; line-height: 0.95; }
+.lead { font-size: var(--fs-lead); font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; }
+
 .leaflet-container { height: 100%; width: 100%; z-index: 1; font-family: inherit; }
-.pb-safe { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+.pb-safe { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
 ::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
 .scrollbar-hide { scrollbar-width: none; }
 
@@ -58,87 +86,106 @@ p { text-wrap: pretty; }
 .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 
 input:focus, textarea:focus, select:focus { outline: none; }
-:focus-visible { outline: 2.5px solid var(--ouro); outline-offset: 2px; border-radius: 10px; }
-button { user-select: none; -webkit-user-select: none; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }
+button { user-select: none; -webkit-user-select: none; cursor: pointer; font: inherit; }
 
-/* ── Botões ───────────────────────────────────────────────────────── */
+@layer components {
+/* ── Botões: sempre arredondados por inteiro, chapados, sem sombra ───── */
 .botao {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 44px; padding: 0 14px; border-radius: 12px;
-  font-weight: 600; font-size: 14px; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 20px; border-radius: 999px;
+  font-weight: 700; font-size: 16px; white-space: nowrap;
   transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease, color var(--t-hover) ease;
 }
 .botao:active, .pressiona:active { transform: scale(0.97); }
 .pressiona { transition: transform var(--t-press) var(--ease-out); }
-.botao-pri { background: var(--verde); color: #fff; }
+.botao-pri { background: var(--musgo); color: #fff; }
 .botao-wa { background: var(--wa); color: #fff; }
-.botao-sec { background: var(--creme); color: var(--verde); }
+.botao-sec { background: var(--nevoa-2); color: var(--araucaria); }
 .botao-sos { background: var(--sos); color: #fff; }
-.botao-claro { background: #fff; color: var(--verde); box-shadow: inset 0 0 0 1.5px rgba(20, 83, 45, 0.18); }
+.botao-claro { background: #fff; color: var(--araucaria); }
+.botao-escuro { background: var(--araucaria); color: #fff; }
+.botao-broto { background: var(--broto); color: var(--araucaria); }
 @media (hover: hover) and (pointer: fine) {
-  .botao-pri:hover { background: var(--verde-2); }
-  .botao-wa:hover { background: #18773f; }
-  .botao-sec:hover { background: var(--creme-2); }
+  .botao-pri:hover { background: var(--musgo-2); }
+  .botao-sec:hover { background: #d6dbd4; }
+  .botao-escuro:hover { background: var(--araucaria-2); }
 }
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
-  min-height: 36px; padding: 0 12px; border-radius: 10px;
-  font-size: 13px; font-weight: 600; background: #fff; color: #3f4a43;
-  box-shadow: inset 0 0 0 1px rgba(23, 36, 28, 0.08);
+  min-height: 40px; padding: 0 16px; border-radius: 999px;
+  font-size: 15px; font-weight: 600; background: var(--papel); color: var(--araucaria);
   transition: background-color var(--t-hover) ease, color var(--t-hover) ease, transform var(--t-press) var(--ease-out);
 }
 .chip:active { transform: scale(0.96); }
-.chip[aria-pressed="true"], .chip.ativo { background: var(--verde); color: #fff; box-shadow: none; }
+.chip[aria-pressed="true"], .chip.ativo { background: var(--araucaria); color: #fff; }
 
-/* Capa sem foto: cor da categoria com textura discreta, nunca foto de banco */
-.capa-sem-foto {
-  background:
-    radial-gradient(120% 140% at 100% 100%, rgba(255,255,255,0.10), transparent 55%),
-    linear-gradient(150deg, color-mix(in oklab, var(--tint) 88%, white) 0%, var(--tint) 55%, color-mix(in oklab, var(--tint) 75%, black) 100%);
+/* Capa sem foto do lugar: cor chapada do tipo */
+.capa-sem-foto { background: var(--tint); }
+
+/* Foto com legível por cima: só um véu neutro na base */
+.veu::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(10,14,12,0) 35%, rgba(10,14,12,0.72) 100%);
 }
 
-/* Coração: pequeno "pulo" ao favoritar */
+/* Coração: pequeno pulo ao favoritar */
 .coracao { transition: transform 200ms var(--ease-out), color var(--t-hover) ease; }
 .coracao.ativo { color: #d43c3c; fill: #d43c3c; animation: pulo 320ms var(--ease-out); }
 @keyframes pulo { 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
 
 /* ── Movimento ───────────────────────────────────────────────────── */
-/* Troca de página: sobe 6px e aparece. Rápido para não atrasar quem tem pressa. */
-.page-transition { animation: entrada 260ms var(--ease-out) both; }
-@keyframes entrada { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-transition { animation: entrada 300ms var(--ease-out) both; }
+@keyframes entrada { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-/* Itens de lista entram em sequência (30–40ms entre eles), só na primeira pintura */
-.entra { animation: entrada 360ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 35ms); }
-
-/* Hero: título e busca chegam como um gesto só */
-.sobe { animation: entrada 520ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 70ms + 40ms); }
-
-/* Números de emergência: caem no lugar */
+.entra { animation: entrada 420ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.sobe { animation: subida 700ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms + 60ms); }
+@keyframes subida { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 .cai { animation: cai 420ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms + 120ms); }
 @keyframes cai { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: none; } }
 
-/* Ponto de "aberto agora" respira devagar (só no destaque da home) */
-.respira { animation: respira 2.4s ease-in-out infinite; }
-@keyframes respira { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+/* Revelação ao rolar: o JS só adiciona .visto; sem JS, tudo aparece */
+.revela { opacity: 1; }
+.js .revela { opacity: 0; transform: translateY(28px); transition: opacity 700ms var(--ease-out), transform 800ms var(--ease-out); transition-delay: calc(var(--i, 0) * 80ms); }
+.js .revela.visto { opacity: 1; transform: none; }
+.js .revela-foto { clip-path: inset(12% 0 0 0); transition: clip-path 1100ms var(--ease-out); }
+.js .revela-foto.visto { clip-path: inset(0 0 0 0); }
 
-/* Painel que abre (horários, formulário): altura real sem medir */
-.abre { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 280ms var(--ease-out); }
+/* Foto que respira devagar (Ken Burns discreto) */
+.deriva { animation: deriva 22s ease-in-out infinite alternate; transform-origin: 60% 40%; }
+@keyframes deriva { from { transform: scale(1.02); } to { transform: scale(1.12) translate(-1.5%, -1%); } }
+
+/* Troca de fotos no pôster da home */
+.slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1400ms ease; }
+.slide.on { opacity: 1; }
+
+.respira { animation: respira 2.4s ease-in-out infinite; }
+@keyframes respira { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.abre { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 300ms var(--ease-out); }
 .abre > div { overflow: hidden; }
 .abre.aberto { grid-template-rows: 1fr; }
 
-/* Esqueleto de carregamento */
-.esqueleto { background: linear-gradient(90deg, #ebe6db 0%, #f4f1eb 50%, #ebe6db 100%); background-size: 200% 100%; animation: brilho 1.3s linear infinite; }
-@keyframes brilho { to { background-position: -200% 0; } }
+/* Folha que sobe de baixo (escolhas do roteiro) */
+.folha { transform: translateY(100%); transition: transform 420ms var(--ease-drawer); }
+.folha.aberta { transform: none; }
+.fundo-folha { opacity: 0; transition: opacity 300ms ease; pointer-events: none; }
+.fundo-folha.aberta { opacity: 1; pointer-events: auto; }
+
+.esqueleto { background: var(--nevoa-2); animation: pisca 1.2s ease-in-out infinite; }
+@keyframes pisca { 50% { opacity: 0.55; } }
+
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .js .revela, .js .revela-foto { opacity: 1; transform: none; clip-path: none; }
 }
 
 /* Marcadores do mapa */
 .pino {
   width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid #fff; box-shadow: 0 4px 10px rgba(13, 58, 31, 0.35);
+  display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
 }
 .pino svg { transform: rotate(45deg); color: #fff; }

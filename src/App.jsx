@@ -8,13 +8,16 @@ import { BusinessDetail } from './pages/BusinessDetail'
 import { Events, EventDetail } from './pages/Events'
 import { Favorites } from './pages/Favorites'
 import { More } from './pages/More'
-import { Anuncie } from './pages/Anuncie'
+import { Anuncie, AnuncieObrigado } from './pages/Anuncie'
+import { Roteiro } from './pages/Roteiro'
+import { Creditos } from './pages/Creditos'
 import { AdminLogin } from './admin/AdminLogin'
 const MapPage = lazy(() => import('./pages/MapPage').then(m => ({ default: m.MapPage })))
 const AdminDashboard = lazy(() => import('./admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminLeads = lazy(() => import('./admin/AdminLeads').then(m => ({ default: m.AdminLeads })))
 const AdminBuscas = lazy(() => import('./admin/AdminBuscas').then(m => ({ default: m.AdminBuscas })))
 const AdminBusinesses = lazy(() => import('./admin/AdminBusinesses').then(m => ({ default: m.AdminBusinesses })))
+const AdminPagamentos = lazy(() => import('./admin/AdminPagamentos').then(m => ({ default: m.AdminPagamentos })))
 const AdminEvents = lazy(() => import('./admin/AdminEvents').then(m => ({ default: m.AdminEvents })))
 import { useAdmin } from './admin/useAdmin'
 
@@ -50,7 +53,11 @@ export default function App() {
         <Route path="/favoritos" element={<Favorites />} />
         <Route path="/mais" element={<More />} />
         <Route path="/anuncie" element={<Anuncie />} />
+        <Route path="/anuncie/obrigado" element={<AnuncieObrigado />} />
+        <Route path="/roteiro" element={<Roteiro />} />
+        <Route path="/creditos" element={<Creditos />} />
         <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+        <Route path="/admin/pagamentos" element={<AdminGuard><AdminPagamentos /></AdminGuard>} />
         <Route path="/admin/leads" element={<AdminGuard><AdminLeads /></AdminGuard>} />
         <Route path="/admin/buscas" element={<AdminGuard><AdminBuscas /></AdminGuard>} />
         <Route path="/admin/empresas" element={<AdminGuard><AdminBusinesses /></AdminGuard>} />

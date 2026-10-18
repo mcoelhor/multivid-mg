@@ -21,7 +21,7 @@ export function EventCard({ event }) {
 
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer"
+      className="bg-white rounded-[var(--raio)] overflow-hidden shadow-sm cursor-pointer"
       onClick={() => navigate(`/evento/${event.id}`)}
     >
       <div className="relative">

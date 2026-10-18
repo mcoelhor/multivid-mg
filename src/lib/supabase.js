@@ -12,4 +12,4 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 // Colunas que o público pode ler (as observações internas ficam de fora)
 export const BUSINESS_COLS =
   'id,slug,name,description,category,subcategory,urgency_group,address,city,latitude,longitude,' +
-  'phone,phone2,whatsapp,email,instagram,website,hours,open_24h,tags,plan,featured,status'
+  'phone,phone2,whatsapp,email,instagram,website,hours,open_24h,tags,plan,plan_expires_at,featured,status'

@@ -1,9 +1,9 @@
 const ESTILO = {
-  aberto: 'bg-[#E3F1E4] text-[#1F6B2A]',
-  plantao: 'bg-[#F6EDD3] text-[#7A5A08]',
-  hoje: 'bg-[#F6EDD3] text-[#7A5A08]',
-  fechado: 'bg-[#F4E4E0] text-[#8A3B2E]',
-  desconhecido: 'bg-[#ECEAE3] text-[#626A63]',
+  aberto: 'bg-[#dcefdc] text-[#1d5f31]',
+  plantao: 'bg-[#f3e8cc] text-[#6e5208]',
+  hoje: 'bg-[#f3e8cc] text-[#6e5208]',
+  fechado: 'bg-[#f2e1dd] text-[#8a3b2e]',
+  desconhecido: 'bg-[var(--nevoa-2)] text-[var(--leve)]',
 }
 
 /** Selo de horário. `longo` mostra "Aberto · fecha às 21h"; curto mostra "Aberto". */
@@ -13,7 +13,7 @@ export function StatusPill({ st, longo = false, className = '' }) {
   const tipo = st.estado === 'fechado' && st.abreHoje ? 'hoje' : st.estado
   const texto = longo ? st.rotulo : st.curto
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${ESTILO[tipo]} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-bold leading-none whitespace-nowrap ${ESTILO[tipo]} ${className}`}>
       {st.estado !== 'desconhecido' && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
       {texto}
     </span>
@@ -26,6 +26,7 @@ export function OpenBadge({ isOpen }) {
   return <StatusPill st={{ estado: isOpen ? 'aberto' : 'fechado', curto: isOpen ? 'Aberto' : 'Fechado', rotulo: '' }} />
 }
 
-export function ParceiroBadge({ className = '' }) {
-  return <span className={`inline-flex items-center rounded-md bg-[#C9A54A] px-2 py-0.5 text-[11px] font-bold text-[#2A2006] ${className}`}>Parceiro</span>
+export function ParceiroBadge({ className = '', plano = 'premium' }) {
+  if (plano === 'destaque') return <span className={`inline-flex items-center rounded-full bg-[var(--broto)] px-2.5 py-1 text-[13px] font-bold leading-none text-[var(--araucaria)] ${className}`}>Destaque</span>
+  return <span className={`inline-flex items-center rounded-full bg-[var(--araucaria)] px-2.5 py-1 text-[13px] font-bold leading-none text-[var(--broto)] ${className}`}>Parceiro</span>
 }
