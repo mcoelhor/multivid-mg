@@ -62,10 +62,10 @@ export function BusinessList() {
   const sugeridas = q ? subsDoTermo(q) : []
 
   return (
-    <Layout title={titulo} showBack subtitle={subtitulo}>
+    <Layout title={titulo} showBack subtitle={subtitulo} largura="largo">
       {foto && !q && (
         <div className="relative mx-5 mb-4 overflow-hidden rounded-[var(--raio)]">
-          <img src={foto.p} alt={foto.legenda} className="deriva aspect-[16/9] w-full object-cover" />
+          <img src={foto.p} srcSet={`${foto.p} 700w, ${foto.g} 1600w`} sizes="(min-width: 1024px) 1180px, 480px" alt={foto.legenda} className="deriva aspect-[16/9] w-full object-cover lg:aspect-auto lg:h-[260px]" />
         </div>
       )}
 
@@ -112,7 +112,7 @@ export function BusinessList() {
       {cat && (category === 'construcao' || category === 'imobiliarias') && !q && <Parceiros contexto={category} />}
 
       {loading ? (
-        <div className="space-y-3 px-5">{[0, 1, 2].map(i => <div key={i} className="esqueleto h-28 rounded-[var(--raio)]" />)}</div>
+        <div className="grade-cards tres space-y-3 px-5">{[0, 1, 2].map(i => <div key={i} className="esqueleto h-28 rounded-[var(--raio)]" />)}</div>
       ) : error ? (
         <p className="mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-5 text-[15px]">Sem conexão. Tente de novo em instantes.</p>
       ) : vazioInicial ? (
@@ -144,18 +144,18 @@ export function BusinessList() {
           {q && !ehUrgente(q) && <Link to="/mais#corrigir" className="mt-4 block text-[15px] font-bold text-[var(--musgo)]">Conhece um lugar para isso? Avise a gente</Link>}
         </div>
       ) : urgente ? (
-        <ul className="space-y-2 px-5 pb-4">{lista.slice(0, 30).map((b, i) => <ContatoLinha key={b.id} b={b} index={i} />)}</ul>
+        <ul className="grade-cards space-y-2 px-5 pb-4">{lista.slice(0, 30).map((b, i) => <ContatoLinha key={b.id} b={b} index={i} />)}</ul>
       ) : (
         <div className="px-5 pb-4">
           {curados.length > 0 && (
             <section aria-labelledby="h-curados" className="mb-6">
               <h2 id="h-curados" className="mb-3 flex items-center gap-2 text-[18px] font-extrabold tracking-[-0.02em]"><Sparkles size={18} className="text-[var(--ouro)]" />Escolhas do guia{situacao ? ` para ${situacao.rotulo.toLowerCase()}` : ''}</h2>
-              <div className="space-y-3">{curados.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
+              <div className="grade-cards tres space-y-3">{curados.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
             </section>
           )}
           {curados.length > 0 && restantes.length > 0 && <h2 className="mb-3 text-[18px] font-extrabold tracking-[-0.02em]">Mais opções</h2>}
           {!curados.length && <h2 className="sr-only">Lugares</h2>}
-          <div className="space-y-3">{restantes.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
+          <div className="grade-cards tres space-y-3">{restantes.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
           {q && sugeridas.length === 0 && restantes.length < 4 && (
             <p className="mt-5 text-[15px] text-[var(--leve)]">Poucos resultados. Tente outra palavra ou veja as <Link to="/categorias" className="font-bold text-[var(--musgo)] underline underline-offset-4">categorias</Link>.</p>
           )}

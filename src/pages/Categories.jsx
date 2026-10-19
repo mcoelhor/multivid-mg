@@ -16,8 +16,8 @@ export function Categories() {
   const cats = ORDEM.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean)
 
   return (
-    <Layout title="Explorar" subtitle="Tudo o que tem na vila" showSearch>
-      <div className="space-y-3 px-5 pt-2">
+    <Layout largura="largo" title="Explorar" subtitle="Tudo o que tem na vila" showSearch>
+      <div className="grade-cards tres space-y-3 px-5 pt-2">
         {cats.map((c, i) => {
           const on = aberta === c.id
           const f = FOTO_CATEGORIA[c.id]

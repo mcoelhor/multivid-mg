@@ -134,7 +134,7 @@ export function MapPage() {
   const { businesses, loading } = useBusinesses({ category: selectedCategory || undefined })
 
   return (
-    <Layout title="Mapa" showBack={false}>
+    <Layout title="Mapa" showBack={false} largura="largo">
       <div className="relative flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
         <div className="flex gap-2 px-5 py-2 overflow-x-auto scrollbar-hide absolute top-0 left-0 right-0 z-[999] bg-gradient-to-b from-white/80 to-transparent backdrop-blur-sm">
           <button

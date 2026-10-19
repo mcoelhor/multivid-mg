@@ -11,7 +11,7 @@ export function Favorites() {
   const favs = businesses.filter(b => favorites.businesses.includes(b.id))
 
   return (
-    <Layout title="Lugares salvos" subtitle={favs.length ? `${favs.length} salvos` : undefined}>
+    <Layout largura="largo" title="Lugares salvos" subtitle={favs.length ? `${favs.length} salvos` : undefined}>
       {!loading && favs.length === 0 ? (
         <div className="flex flex-col items-center px-8 py-20 text-center">
           <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--raio)] bg-white"><Heart size={26} className="text-[#d43c3c]" /></span>
@@ -20,7 +20,7 @@ export function Favorites() {
           <Link to="/" className="botao botao-pri mt-5">Explorar</Link>
         </div>
       ) : (
-        <div className="space-y-3 px-5 pt-4">{favs.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
+        <div className="grade-cards tres space-y-3 px-5 pt-4">{favs.map((b, i) => <BusinessCard key={b.id} business={b} index={i} />)}</div>
       )}
     </Layout>
   )

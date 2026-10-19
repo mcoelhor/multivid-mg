@@ -18,7 +18,7 @@ export function Cookies() {
   if (!mostrar) return null
   const escolher = v => { guardarConsentimento(v); setMostrar(false) }
   return (
-    <div className="fixed inset-x-0 z-[65] mx-auto max-w-[480px] px-3" style={{ bottom: 'calc(68px + env(safe-area-inset-bottom) + 8px)' }} role="dialog" aria-label="Cookies">
+    <div className="fixed inset-x-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-[65] mx-auto max-w-[480px] px-3 lg:bottom-6" role="dialog" aria-label="Cookies">
       <div className="rounded-[var(--raio)] bg-[var(--araucaria)] p-4 text-white" style={{ boxShadow: '0 12px 32px -12px rgba(0,0,0,.5)' }}>
         <p className="text-[14px] leading-snug">Usamos cookies para medir e mostrar o guia a quem está em Monte Verde. Você escolhe. <Link to="/privacidade" className="underline">Saiba mais</Link>.</p>
         <div className="mt-3 flex gap-2">

@@ -139,7 +139,7 @@ function FolhaAdicionar({ aberta, onFechar, cands, dia, perfil, usados, onEscolh
   return createPortal(
     <>
       <div className={`fundo-folha fixed inset-0 z-[60] bg-black/45 ${aberta ? 'aberta' : ''}`} onClick={onFechar} />
-      <div className={`folha fixed bottom-0 z-[61] max-h-[82svh] w-full max-w-[480px] overflow-y-auto rounded-t-[28px] bg-[var(--nevoa)] pb-[calc(env(safe-area-inset-bottom)+20px)] min-[900px]:left-[max(6vw,calc(50vw-560px))] max-[899px]:left-1/2 max-[899px]:-translate-x-1/2 ${aberta ? 'aberta' : ''}`}
+      <div className={`folha fixed bottom-0 z-[61] max-h-[82svh] inset-x-0 mx-auto w-full max-w-[480px] overflow-y-auto rounded-t-[28px] bg-[var(--nevoa)] pb-[calc(env(safe-area-inset-bottom)+20px)] lg:max-w-[560px] ${aberta ? 'aberta' : ''}`}
         role="dialog" aria-modal="true" aria-label="Adicionar parada">
         <div className="sticky top-0 z-10 bg-[var(--nevoa)] px-5 pb-3 pt-3">
           <div className="mx-auto h-1.5 w-10 rounded-full bg-black/15" />

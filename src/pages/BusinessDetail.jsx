@@ -8,6 +8,7 @@ import { StatusPill, ParceiroBadge, VerificadoBadge } from '../components/UI/Bad
 import { InstagramIcon } from '../components/UI/Icon'
 import { BottomNav } from '../components/Layout/BottomNav'
 import { Rodape } from '../components/Layout/Rodape'
+import { TopNav } from '../components/Layout/TopNav'
 import { useTitulo } from '../components/Layout/Layout'
 import { Parceiros } from '../components/Parceiros'
 import { CartaoOferta } from '../components/Oferta'
@@ -22,9 +23,9 @@ import { registrar, linkTel, linkWhatsApp, linkRota, linkInstagram } from '../li
 
 function Fotos({ b }) {
   const [i, setI] = useState(0)
-  if (!b.images?.length) return <Capa b={b} alto="h-44" grande />
+  if (!b.images?.length) return <Capa b={b} alto="h-44 lg:h-[460px]" grande />
   return (
-    <div className="relative h-64 overflow-hidden bg-[var(--nevoa-2)]">
+    <div className="relative h-64 overflow-hidden bg-[var(--nevoa-2)] lg:h-[460px] lg:rounded-[var(--raio)]">
       <div className="flex h-full snap-x snap-mandatory overflow-x-auto scrollbar-hide" onScroll={e => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
         {b.images.map((src, k) => <img key={src} src={src} alt={k === 0 ? b.name : ''} className="h-full w-full shrink-0 snap-center object-cover" />)}
       </div>
@@ -88,8 +89,11 @@ export function BusinessDetail() {
   const comod = (b.amenities || []).map(id => COMODIDADES.find(c => c[0] === id)).filter(Boolean)
 
   return (
-    <main className="flex min-h-dvh flex-col pb-safe">
-      <div className="relative">
+    <main className="flex min-h-dvh flex-col pb-safe lg:pb-0">
+      <TopNav />
+      {/* Computador: fotos à esquerda (fixas ao rolar) e informações à direita */}
+      <div className="lg:mx-auto lg:grid lg:w-full lg:max-w-[1180px] lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-12 lg:px-8 lg:pt-8">
+      <div className="relative lg:sticky lg:top-24 lg:overflow-hidden lg:rounded-[var(--raio)]">
         <Fotos b={b} />
         <button onClick={() => (history.length > 1 ? navigate(-1) : navigate('/'))} className="pressiona absolute left-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }} aria-label="Voltar"><ChevronLeft size={22} /></button>
         <div className="absolute right-4 flex gap-2" style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }}>
@@ -98,7 +102,7 @@ export function BusinessDetail() {
         </div>
       </div>
 
-      <div className="relative z-10 -mt-4 flex-1 rounded-t-[28px] bg-[var(--nevoa)] px-5 pt-6">
+      <div className="relative z-10 -mt-4 flex-1 rounded-t-[28px] bg-[var(--nevoa)] px-5 pt-6 lg:mt-0 lg:rounded-none lg:px-0 lg:pt-0">
         <div className="sobe" style={{ '--i': 0 }}>
           <h1 className="titulo">{b.name}</h1>
           <p className="mt-2 text-[16px] font-semibold text-[var(--musgo)]">{nomeSub(b)}</p>
@@ -172,13 +176,14 @@ export function BusinessDetail() {
         <Link to="/mais#corrigir" className="mt-2 flex min-h-11 items-center gap-2 px-1 text-[14px] text-[var(--leve)]"><Flag size={14} />Informação desatualizada? Avise a gente.</Link>
         <Link to="/meu-negocio" className="flex min-h-11 items-center gap-2 px-1 text-[14px] text-[var(--leve)]"><Store size={14} />É o dono? Ponha fotos e atualize sua página.</Link>
       </div>
+      </div>
 
       {(b.category === 'construcao' || b.category === 'imobiliarias') && <Parceiros contexto={b.category} />}
 
       {outros.length > 0 && (
-        <section className="px-5 pt-6">
+        <section className="px-5 pt-6 lg:mx-auto lg:w-full lg:max-w-[1180px] lg:px-8 lg:pt-14">
           <h2 className="titulo mb-4">Outros parecidos</h2>
-          <div className="space-y-3">{outros.map((x, i) => <BusinessCard key={x.id} business={x} index={i} compacto />)}</div>
+          <div className="grade-cards space-y-3">{outros.map((x, i) => <BusinessCard key={x.id} business={x} index={i} compacto />)}</div>
         </section>
       )}
       <Rodape />

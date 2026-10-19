@@ -52,10 +52,10 @@ function Poster() {
     return () => { clearTimeout(pre); clearTimeout(t) }
   }, [i])
   return (
-    <section className="relative h-[60svh] min-h-[400px] overflow-hidden bg-[var(--araucaria)]" aria-label="Monte Verde">
+    <section className="relative h-[60svh] min-h-[400px] overflow-hidden bg-[var(--araucaria)] lg:h-auto lg:min-h-[calc(100svh-64px)]" aria-label="Monte Verde">
       {POSTER.map((f, k) => prontas.has(k) && (
         <div key={f.id} className={`slide ${k === i ? 'on' : ''}`} aria-hidden={k !== i}>
-          <img src={f.g} srcSet={`${f.p} 700w, ${f.g} 1600w`} sizes="480px" alt={f.legenda}
+          <img src={f.g} srcSet={`${f.p} 700w, ${f.g} 1600w`} sizes="(min-width: 1024px) 60vw, 480px" alt={f.legenda}
             className="deriva h-full w-full object-cover" fetchPriority={k === 0 ? 'high' : 'auto'} />
         </div>
       ))}
@@ -64,7 +64,7 @@ function Poster() {
       <p className="sobe display absolute left-5 text-[length:var(--fs-poster)] text-white" style={{ top: 'calc(env(safe-area-inset-top) + 18px)', '--i': 0 }} aria-hidden="true">Monte</p>
       <p className="sobe display absolute bottom-5 right-5 text-[length:var(--fs-poster)] text-white" style={{ '--i': 1 }} aria-hidden="true">Verde</p>
       <p key={i} className="entra absolute left-5 max-w-[60%] text-[14px] leading-snug text-white/90" style={{ top: 'calc(env(safe-area-inset-top) + 18px + var(--fs-poster) * 0.95)' }}>{POSTER[i].legenda}</p>
-      <Link to="/busca" aria-label="Buscar" className="pressiona absolute right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 26px)' }}>
+      <Link to="/busca" aria-label="Buscar" className="pressiona absolute right-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[var(--araucaria)] lg:hidden" style={{ top: 'calc(env(safe-area-inset-top) + 26px)' }}>
         <Search size={19} />
       </Link>
     </section>
@@ -136,12 +136,12 @@ function Agora() {
   ]
 
   return (
-    <section className="bg-[var(--araucaria)] px-5 pb-8 pt-6 text-white" aria-labelledby="h-agora">
+    <section className="bg-[var(--araucaria)] px-5 pb-8 pt-6 text-white lg:flex lg:flex-col lg:justify-center lg:px-12 lg:py-12" aria-labelledby="h-agora">
       <p className="sobe flex flex-wrap items-center gap-x-1.5 text-[15px] text-white/75" style={{ '--i': 2 }}>
         <span>{saudacao(a.min)}. {DIAS_NOME[DIAS[a.dia]]}, <span className="num">{hhmm(a.min)}</span> em Monte Verde.</span>
         {clima && <span className="inline-flex items-center gap-1 text-white"><Icon name={clima.icone} size={16} className="text-[var(--broto)]" /><span><span className="num">{clima.temp} °C</span>, {clima.texto}</span></span>}
       </p>
-      <h2 id="h-agora" className="sobe mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.03em]" style={{ '--i': 2 }}>
+      <h2 id="h-agora" className="sobe mt-1 text-[26px] font-extrabold leading-tight tracking-[-0.03em] lg:text-[36px]" style={{ '--i': 2 }}>
         {abertos.length ? <><span className="num">{abertos.length}</span> lugares abertos agora</> : 'O que você precisa agora?'}
       </h2>
 
@@ -235,11 +235,11 @@ function Ofertas() {
 /** Convite ao roteiro: foto grande, cartão encostado embaixo. */
 function ConviteRoteiro() {
   return (
-    <section className="relative mt-16" aria-labelledby="h-roteiro">
-      <div className="revela-foto relative aspect-[4/3] overflow-hidden">
+    <section className="relative mt-16 lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-center" aria-labelledby="h-roteiro">
+      <div className="revela-foto relative aspect-[4/3] overflow-hidden lg:rounded-[var(--raio)]">
         <img src={FOTOS.porDoSol.g} srcSet={`${FOTOS.porDoSol.p} 700w, ${FOTOS.porDoSol.g} 1600w`} sizes="480px" alt={FOTOS.porDoSol.legenda} loading="lazy" className="deriva h-full w-full object-cover" />
       </div>
-      <div className="revela relative -mt-16 mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-6">
+      <div className="revela relative -mt-16 mx-5 rounded-[var(--raio)] bg-[var(--papel)] p-6 lg:-ml-24 lg:mr-0 lg:mt-0 lg:p-10">
         <h2 id="h-roteiro" className="titulo">Seu fim de semana, já montado</h2>
         <p className="mt-3 text-[16px] leading-relaxed text-[var(--leve)]">
           Diga quantos dias fica, com quem vem e do que gosta. Montamos manhã, almoço, tarde e jantar, priorizando quem tem horário confirmado para o dia. Depois é só trocar o que quiser.
@@ -353,11 +353,11 @@ function Explorar() {
 /** Chamada para quem tem negócio na vila. */
 function ParaNegocios() {
   return (
-    <section className="mt-16" aria-labelledby="h-negocio">
+    <section className="mt-16 lg:grid lg:grid-cols-2 lg:overflow-hidden lg:rounded-[var(--raio)]" aria-labelledby="h-negocio">
       <div className="revela-foto overflow-hidden">
-        <img src={FOTOS.vilaAerea.g} alt={FOTOS.vilaAerea.legenda} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+        <img src={FOTOS.vilaAerea.g} alt={FOTOS.vilaAerea.legenda} loading="lazy" className="aspect-[4/3] w-full object-cover lg:h-full" />
       </div>
-      <div className="bg-[var(--musgo)] px-5 pb-10 pt-8 text-white">
+      <div className="bg-[var(--musgo)] px-5 pb-10 pt-8 text-white lg:flex lg:flex-col lg:justify-center lg:p-12">
         <h2 id="h-negocio" className="titulo revela">Tem um negócio em Monte Verde?</h2>
         <p className="revela mt-3 max-w-[34ch] text-[17px] leading-relaxed text-white" style={{ '--i': 1 }}>
           Apareça para o turista na hora em que ele decide onde comer, dormir e passear. Cadastro grátis; destaque a partir de R$ 49 por mês.
@@ -371,17 +371,25 @@ function ParaNegocios() {
 export function Home() {
   const { events } = useEvents({ filter: '30days' })
   return (
-    <Layout hideHeader titulo="">
+    <Layout hideHeader titulo="" largura="cheio">
       <Avisos />
-      <Poster />
-      <Agora />
-      <Momentos />
-      <Ofertas />
-      <Explorar />
-      <NaEpoca />
-      <ConviteRoteiro />
-      <Historia />
-      <SoAqui />
+      {/* Computador: foto e "agora" lado a lado, ocupando a primeira tela */}
+      <div className="lg:grid lg:grid-cols-[1.4fr_1fr]">
+        <Poster />
+        <Agora />
+      </div>
+      <div className="lg:mx-auto lg:max-w-[1180px] lg:px-3">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
+          <div><Momentos /><NaEpoca /></div>
+          <div><Ofertas /><Explorar /></div>
+        </div>
+        <ConviteRoteiro />
+        <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
+          <Historia />
+          <SoAqui />
+        </div>
+      </div>
+      <div className="lg:mx-auto lg:max-w-[1180px] lg:px-3">
       {events.length > 0 && (
         <section className="mt-16" aria-labelledby="h-eventos">
           <div className="flex items-end justify-between px-5">
@@ -389,12 +397,13 @@ export function Home() {
             <Link to="/eventos" className="text-[15px] font-bold text-[var(--musgo)]">Todos</Link>
           </div>
           <div className="mt-5 flex gap-3 overflow-x-auto px-5 pb-1 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
-            {events.slice(0, 5).map(ev => <div key={ev.id} className="w-[78%] shrink-0" style={{ scrollSnapAlign: 'start' }}><EventCard event={ev} /></div>)}
+            {events.slice(0, 5).map(ev => <div key={ev.id} className="w-[78%] shrink-0 lg:w-[calc((100%-24px)/3)]" style={{ scrollSnapAlign: 'start' }}><EventCard event={ev} /></div>)}
           </div>
         </section>
       )}
       <div className="mt-12"><Parceiros contexto="home" /></div>
       <ParaNegocios />
+      </div>
     </Layout>
   )
 }

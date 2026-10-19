@@ -77,7 +77,7 @@ export function Parceiros({ contexto = 'construcao' }) {
     <section className="px-5 py-6" aria-label="Parceiros do guia">
       <h2 className="titulo revela">{titulo}</h2>
       <p className="revela mt-2 text-[16px] leading-relaxed text-[var(--leve)]">{sub} <span className="font-bold text-[var(--araucaria)]">Parceiros do guia.</span></p>
-      <div className="mt-5 space-y-3">
+      <div className="grade-cards mt-5 space-y-3">
         {ordem.map(k => <CartaoParceiro key={k} id={k} p={PARCEIROS[k]} />)}
       </div>
     </section>

@@ -151,7 +151,7 @@ export function Anuncie() {
       <section className="relative">
         <img src={FOTOS.avenida.g} srcSet={`${FOTOS.avenida.p} 700w, ${FOTOS.avenida.g} 1600w`} sizes="480px" alt={FOTOS.avenida.legenda} className="h-[56svh] min-h-[380px] w-full object-cover" />
         <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,14,12,.5) 0%, rgba(10,14,12,0) 35%, rgba(10,14,12,.75) 100%)' }} />
-        <Link to="/" className="pressiona absolute left-5 flex h-11 items-center rounded-full bg-white px-4 text-[15px] font-bold text-[var(--araucaria)]" style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}>Monte Verde</Link>
+        <Link to="/" className="pressiona absolute left-5 flex h-11 items-center rounded-full bg-white px-4 text-[15px] font-bold text-[var(--araucaria)] lg:hidden" style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}>Monte Verde</Link>
         <h1 className="sobe titulo absolute bottom-6 left-5 right-5 text-white">Seja encontrado por quem já está na vila</h1>
       </section>
 

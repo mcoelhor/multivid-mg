@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 z-50 w-full max-w-[480px] bg-[var(--araucaria)] min-[900px]:left-[max(6vw,calc(50vw-560px))] max-[899px]:left-1/2 max-[899px]:-translate-x-1/2"
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[480px] bg-[var(--araucaria)] lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navegação principal"
     >

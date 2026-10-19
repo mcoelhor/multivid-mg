@@ -66,9 +66,19 @@ body {
   background: var(--nevoa);
   overflow-x: clip;
 }
-@media (min-width: 900px) {
-  #root { margin: 0 0 0 max(6vw, calc(50vw - 560px)); }
-  .lado-desktop { display: block !important; }
+/* Computador: o app ocupa a tela inteira, com menu no topo e conteúdo centralizado */
+@media (min-width: 1024px) {
+  body { background: var(--nevoa); }
+  #root { max-width: none; margin: 0; }
+  :root { --fs-titulo: 44px; --fs-poster: clamp(112px, 9.5vw, 168px); }
+}
+/* Listas de lugares: uma coluna no celular, grade no computador */
+@media (min-width: 1024px) {
+  .grade-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .grade-cards > * { margin: 0 !important; }
+}
+@media (min-width: 1280px) {
+  .grade-cards.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 h1, h2, h3 { text-wrap: balance; }

@@ -44,7 +44,7 @@ export function Events() {
   const { events, loading } = useEvents({ filter: dateFilter, category: catFilter })
 
   return (
-    <Layout title="Eventos" subtitle="Monte Verde e região">
+    <Layout largura="largo" title="Eventos" subtitle="Monte Verde e região">
       <div className="pt-3">
         <div className="flex gap-2 overflow-x-auto px-5 pb-2 scrollbar-hide">
           {DATE_FILTERS.map(f => (
@@ -84,7 +84,7 @@ export function Events() {
             <p className="text-sm text-gray-500 mt-1">A agenda de Monte Verde está sendo montada. Tem um evento? Avise pelo menu Mais.</p>
           </div>
         ) : (
-          <div className="px-5 space-y-4 pb-4">
+          <div className="grade-cards tres px-5 space-y-4 pb-4">
             {events.map(ev => <EventCard key={ev.id} event={ev} />)}
           </div>
         )}
