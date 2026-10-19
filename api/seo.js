@@ -1,6 +1,6 @@
 // sitemap.xml e robots.txt gerados do banco, para o Google achar cada lugar e categoria.
-const SUPA = 'https://cpoxykaksqlrqnstjonv.supabase.co'
-const KEY = 'sb_publishable_Azm8A8z7LluWcp7_pNruxQ_NZ03PaCL'
+const SUPA = 'https://isotmggdbtqlyvddxmpe.supabase.co'
+const KEY = 'sb_publishable_hCZZt7bF9DBiPFQnijrgmA_UF8PcrM5'
 const CATS = ['alimentacao', 'hospedagem', 'turismo', 'compras', 'saude', 'transporte', 'servicos', 'construcao', 'imobiliarias']
 
 export default async function handler(req, res) {

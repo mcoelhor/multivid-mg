@@ -2,10 +2,10 @@
    - Navegação: rede primeiro; sem rede, a última versão do app.
    - /assets: cache primeiro (nomes com hash, imutáveis).
    - Lista do guia, ofertas, avisos e fotos: cache enquanto atualiza por trás. */
-const VERSAO = 'mv-sw-v2'
+const VERSAO = 'mv-sw-v3'
 const APP = `${VERSAO}-app`
 const DADOS = `${VERSAO}-dados`
-const SUPA = 'cpoxykaksqlrqnstjonv.supabase.co'
+const SUPA = 'isotmggdbtqlyvddxmpe.supabase.co'
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(APP).then(c => c.addAll(['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png']).catch(() => {})).then(() => self.skipWaiting()))

@@ -1,7 +1,7 @@
 // Pré-renderização para robôs (WhatsApp, Google, Facebook): HTML com título, descrição,
 // imagem de prévia e dados estruturados. Pessoas continuam recebendo o app (ver vercel.json).
-const SUPA = 'https://cpoxykaksqlrqnstjonv.supabase.co'
-const KEY = 'sb_publishable_Azm8A8z7LluWcp7_pNruxQ_NZ03PaCL'
+const SUPA = 'https://isotmggdbtqlyvddxmpe.supabase.co'
+const KEY = 'sb_publishable_hCZZt7bF9DBiPFQnijrgmA_UF8PcrM5'
 const FOTOS = `${SUPA}/storage/v1/object/public/fotos/cidade/`
 const CATS = {
   alimentacao: ['Comer', 'Restaurantes, fondue, cafés, pizzarias e bares em Monte Verde', 'viela-lojas'],

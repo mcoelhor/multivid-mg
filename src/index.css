@@ -59,7 +59,7 @@ html { overflow-x: hidden; }
 
 /* No computador, o app fica como uma coluna de celular sobre a serra */
 body {
-  background: var(--araucaria) url('https://cpoxykaksqlrqnstjonv.supabase.co/storage/v1/object/public/fotos/cidade/mar-de-nuvens-g.webp') center / cover fixed;
+  background: var(--araucaria) url('https://isotmggdbtqlyvddxmpe.supabase.co/storage/v1/object/public/fotos/cidade/mar-de-nuvens-g.webp') center / cover fixed;
 }
 #root {
   max-width: 480px; margin: 0 auto; min-height: 100dvh; position: relative;

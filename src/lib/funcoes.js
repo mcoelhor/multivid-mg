@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-const BASE = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/'
+const BASE = 'https://isotmggdbtqlyvddxmpe.supabase.co/functions/v1/'
 
 /** Chama uma função do servidor com o login do dono. Lança erro com a mensagem do servidor. */
 export async function chamarComLogin(nome, corpo) {

@@ -1,7 +1,7 @@
 // Fotos livres de Monte Verde (Wikimedia Commons), guardadas no Storage do app.
 // Mostram a cidade, nunca um estabelecimento específico. Créditos na página /creditos.
 
-const BASE = 'https://cpoxykaksqlrqnstjonv.supabase.co/storage/v1/object/public/fotos/cidade'
+const BASE = 'https://isotmggdbtqlyvddxmpe.supabase.co/storage/v1/object/public/fotos/cidade'
 
 const F = (id, legenda, autor, licenca, fonte, w, h) => ({
   id, legenda, autor, licenca, fonte, w, h,

@@ -8,7 +8,7 @@ import { norm } from '../lib/busca'
 import { FOTOS } from '../data/fotos'
 import { registrar } from '../lib/track'
 
-const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/checkout'
+const FUNCAO = 'https://isotmggdbtqlyvddxmpe.supabase.co/functions/v1/checkout'
 const GRATIS = { id: 'free', nome: 'Grátis', preco: 0, beneficios: ['Página com endereço, telefone, WhatsApp e rota', 'Selo “aberto agora” pelo seu horário', 'Aparece na busca e no mapa'] }
 const reais = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })
 

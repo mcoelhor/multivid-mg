@@ -1,6 +1,6 @@
 // Notificações push: "me avise quando chegar" e "avise quando abrir".
 // Só funciona com o service worker; no iPhone, só com o app na tela de início.
-const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/push'
+const FUNCAO = 'https://isotmggdbtqlyvddxmpe.supabase.co/functions/v1/push'
 const CHAVE_PUBLICA = 'BAuD7s4IZYdrR-g9i3ma9zje_kQNSUWbGzQOsiPxABv5vAcB5sMS07SH7lhwzl05nMooT2D1NZrzXmDNQuZeQP4'
 
 export const ehIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream

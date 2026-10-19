@@ -3,7 +3,7 @@ import { MessageCircle, Check, X, BadgeCheck } from 'lucide-react'
 import { AdminLayout } from './AdminLayout'
 import { supabase } from '../lib/supabase'
 
-const FUNCAO = 'https://cpoxykaksqlrqnstjonv.supabase.co/functions/v1/aprovar-reivindicacao'
+const FUNCAO = 'https://isotmggdbtqlyvddxmpe.supabase.co/functions/v1/aprovar-reivindicacao'
 const data = d => (d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '')
 
 async function chamar(corpo) {

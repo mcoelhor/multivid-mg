@@ -14,7 +14,7 @@ import { COMODIDADES } from '../data/comodidades'
 import { Icon } from '../components/UI/Icon'
 
 const campo = 'mt-1.5 w-full rounded-2xl bg-[var(--nevoa)] px-4 py-3.5 text-[16px]'
-const FOTOS_URL = 'https://cpoxykaksqlrqnstjonv.supabase.co/storage/v1/object/public/fotos/'
+const FOTOS_URL = 'https://isotmggdbtqlyvddxmpe.supabase.co/storage/v1/object/public/fotos/'
 
 function useSessao() {
   const [s, setS] = useState({ carregando: true, user: null })
