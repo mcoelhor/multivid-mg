@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Megaphone, Trash2, Plus, Cloud } from 'lucide-react'
+import { Megaphone, Trash2, Plus, Cloud, BellRing } from 'lucide-react'
 import { AdminLayout } from './AdminLayout'
 import { supabase } from '../lib/supabase'
 import { useClima } from '../hooks/useClima'
@@ -27,6 +27,34 @@ function Marketing() {
       <label className="mt-3 block text-[13px] font-bold">Google tag (G-XXXX, AW-XXXX ou GT-XXXX)</label>
       <input value={c.google_tag_id || ''} onChange={e => setC(v => ({ ...v, google_tag_id: e.target.value }))} placeholder="ex.: G-ABC123DEF4" className="mt-1 w-full rounded-xl bg-[var(--creme)] px-3 py-2.5 text-sm" />
       <button onClick={salvar} className="botao botao-pri mt-3 h-10 min-h-0 w-full text-[14px]">{msg || 'Salvar'}</button>
+    </section>
+  )
+}
+
+/** Fila de notificações dos anunciantes: o admin vê o que vai sair e pode cancelar. */
+function FilaNotificacoes() {
+  const [lista, setLista] = useState(null)
+  const carregar = () => supabase.from('push_campanhas').select('id,texto,agendado_para,status,enviados,businesses(name)').order('agendado_para', { ascending: false }).limit(30).then(({ data }) => setLista(data || []))
+  useEffect(() => { carregar() }, [])
+  async function cancelar(c) { if (confirm('Cancelar esta notificação?')) { await supabase.rpc('cancelar_notificacao', { p_id: c.id }); carregar() } }
+  return (
+    <section className="mt-4 rounded-2xl bg-white p-4">
+      <h2 className="flex items-center gap-2 font-bold"><BellRing size={18} className="text-[var(--verde)]" />Notificações dos anunciantes</h2>
+      <p className="mt-1 text-[13px] text-[#626a63]">Agendadas pelos donos (Destaque: 1 por semana, Parceiro: 3). Saem uma a cada 5 minutos, das 8h às 21h; cada aparelho recebe no máximo 2 por dia.</p>
+      {lista === null ? <div className="esqueleto mt-2 h-14 rounded-xl" /> : lista.length === 0 ? <p className="mt-2 text-sm text-[#626a63]">Nenhuma ainda.</p> : (
+        <ul className="mt-2 space-y-2">
+          {lista.map(c => (
+            <li key={c.id} className={`rounded-xl bg-[var(--creme)] p-3 ${c.status === 'cancelada' ? 'opacity-60' : ''}`}>
+              <p className="text-[13px] font-bold">{c.businesses?.name}</p>
+              <p className="text-sm">{c.texto}</p>
+              <p className="mt-1 flex items-center justify-between text-[12px] text-[#626a63]">
+                <span>{local(c.agendado_para)} · {c.status}{c.status === 'enviada' ? ` · ${c.enviados} pessoas` : ''}</span>
+                {c.status === 'agendada' && <button onClick={() => cancelar(c)} className="font-semibold text-[var(--sos)]">Cancelar</button>}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
@@ -81,6 +109,7 @@ export function AdminAvisos() {
         <button className="botao botao-pri mt-3 w-full"><Plus size={16} />Publicar aviso</button>
       </form>
 
+      <FilaNotificacoes />
       <Marketing />
 
       <h2 className="mt-5 font-bold">Avisos</h2>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Store, LogOut, Loader2, Check, Camera, Trash2, Eye, Phone, MessageCircle, KeyRound, Ticket, Plus, Mail, Search, Clock } from 'lucide-react'
 import { Autocadastro } from '../components/Autocadastro'
 import { Reivindicar, CodigoConfirmacao } from '../components/Reivindicar'
+import { NotificacoesDono } from '../components/NotificacoesDono'
 import { carregarOfertas } from '../hooks/useOfertas'
 import { Layout } from '../components/Layout/Layout'
 import { StatusPill } from '../components/UI/Badge'
@@ -368,6 +369,7 @@ function Editor({ negocio, onSalvo }) {
       </section>
 
       {b.status === 'active' && <OfertasDono b={b} />}
+      {b.status === 'active' && <NotificacoesDono b={b} />}
 
       <button onClick={salvar} disabled={estado === 'salvando'} className="botao botao-pri mt-8 h-14 w-full text-[17px]">
         {estado === 'salvando' ? <Loader2 size={18} className="animate-spin" /> : estado === 'ok' ? <><Check size={18} />Salvo</> : 'Salvar alterações'}
@@ -409,7 +411,7 @@ export function MeuNegocio() {
   const carregar = useCallback(async (abrirId = null) => {
     if (!user) return
     const [{ data: donos }, { data: peds }, { data: cfg }] = await Promise.all([
-      supabase.from('business_owners').select('business_id, businesses(id,slug,name,status,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h,amenities)').eq('user_id', user.id),
+      supabase.from('business_owners').select('business_id, businesses(id,slug,name,status,plan,plan_expires_at,description,category,subcategory,address,city,phone,phone2,whatsapp,email,instagram,website,hours,open_24h,amenities)').eq('user_id', user.id),
       supabase.from('reivindicacoes').select('id,status,codigo,business_id,criado_em,businesses(name)').eq('user_id', user.id).order('criado_em', { ascending: false }),
       supabase.from('config').select('valor').eq('chave', 'whatsapp_guia').maybeSingle(),
     ])
